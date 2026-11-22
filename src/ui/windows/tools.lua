@@ -173,7 +173,9 @@ local toolOrderOverrides = {
     stylegrounds = 5,
     preview = 6,
     scripts = 7,
-    debug = 8
+    debug = 8,
+    -- Own group at the bottom; panels added later continue below it
+    project = 9
 }
 
 local layersWithSubLayers = {
@@ -4368,6 +4370,9 @@ getMaterialItems = function(layer)
 
         local itemFavorited = not not favoritesLookup[materialData]
 
+        -- Tool panels may mix in their own non-interactive label rows and indentation
+        local materialFlags = materialType == "table" and material or {}
+
         return {
             text = materialText,
             textNoMods = materialTextNoMods,
@@ -4381,7 +4386,15 @@ getMaterialItems = function(layer)
             associatedMods = material.associatedMods,
             -- Button rows run an action on click and never become the selection
             isButton = materialType == "table" and material.isButton or nil,
-            onPress = materialType == "table" and material.onPress or nil
+            onPress = materialType == "table" and material.onPress or nil,
+            -- Label rows are not selectable and panels may bring their own display order
+            isHeader = materialFlags.isHeader,
+            isSource = materialFlags.isSource,
+            sourceKey = materialFlags.sourceKey,
+            sourceLabel = materialFlags.sourceLabel,
+            indent = materialFlags.indent,
+            sortIndex = materialFlags.sortIndex,
+            alwaysTop = materialFlags.alwaysTop
         }
     end
 
@@ -5252,7 +5265,8 @@ local defaultToolOrder = 1000
 -- no hover, no click, no selection and no keyboard navigation.
 local toolSeparatorsBefore = {
     stylegrounds = true,
-    scripts = true
+    scripts = true,
+    project = true
 }
 
 local function getToolSpacer()

@@ -88,6 +88,8 @@ tools.room.modes.description.selection=Selects rooms and fillers. Drag on empty 
 
 tools.name.stylegrounds=Stylegrounds
 tools.description.stylegrounds=Adds backgrounds to the foreground or background list of the map.
+tools.name.project=Project Setting
+tools.description.project=Shows the settings of the current mod project and the project related quick actions.
 
 tools.name.preview=Preview
 tools.description.preview=Lists images of the asset folders and copies their paths.
