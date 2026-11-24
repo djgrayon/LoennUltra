@@ -148,6 +148,21 @@ function notificationHandlers:editorHistoryRedoEmpty()
     )
 end
 
+function notificationHandlers:editorMenuActionUnavailable(messageKey)
+    local language = languageRegistry.getLanguage()
+    local template = language.ui.notifications[messageKey]
+
+    if not template then
+        return
+    end
+
+    notifications.notify(
+        tostring(template),
+        nil,
+        {clearSameTag = true, tag = "editorMenuActionUnavailable", clickToClose = true}
+    )
+end
+
 function notificationHandlers:editorMapMissingDependencies(missing)
     local language = languageRegistry.getLanguage()
     local missingString = table.concat(missing, ", ")

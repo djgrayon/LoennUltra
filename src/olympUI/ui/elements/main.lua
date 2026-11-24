@@ -864,15 +864,19 @@ uie.default = {
         local parent = self.parent
 
         if not parent then
-            -- Parent not present, remove late.
-            if not self.__removing then
-                self.__removing = true
-                ui.runLate(function()
-                    if self.__removing then
-                        self.__removing = false
-                        self:removeSelf()
+            self.__removing = false
+
+            local root = ui.root
+
+            if root and root.children then
+                for i = #root.children, 1, -1 do
+                    if root.children[i] == self then
+                        table.remove(root.children, i)
+                        break
                     end
-                end)
+                end
+
+                root:recollect()
             end
 
             return

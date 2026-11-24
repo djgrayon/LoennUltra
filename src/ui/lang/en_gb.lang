@@ -22,6 +22,8 @@ ui.notifications.editorMapLoadFailed=Failed to load map: %s
 ui.notifications.editorMapNew=Created new map
 ui.notifications.editorMapMissingDependencies=Missing dependencies: %s
 ui.notifications.editorHistoryUndoEmpty=Unable to undo, end of history
+ui.notifications.editorMenuNeedsSelectionTool=Switch to the Selection tool first
+ui.notifications.editorMenuNeedsSelection=Select something in the map first
 ui.notifications.editorHistoryRedoEmpty=Unable to redo, end of history
 ui.notifications.editorQuitWithChanges=You have unsaved pending changes.\nAre you sure you want to quit?
 ui.notifications.editorLoadWithChanges=You have unsaved pending changes.\nAre you sure you want to load this map?
@@ -313,6 +315,7 @@ ui.dependency_window.no_everest_yaml=No everest.yaml found.\nWould you like to c
 
 # Tools Window
 ui.tools_window.window_title=Tools
+ui.tools_window.hotkey_suffix= (%s)
 ui.tools_window.favorite=Favorite
 ui.tools_window.add_sub_layer=Add group
 ui.tools_window.delete_sub_layer=Delete group
@@ -462,10 +465,10 @@ ui.menubar.save_map_image=Save Map Image
 
 ui.menubar.ghost=Ghost
 ui.menubar.ghost_helper_hint=You Should Enable Loenn Helper to Use this Feature
-ui.menubar.ghost_show_player=Show Player Ghost [C]
-ui.menubar.ghost_show_player_hitbox=Show Player Hitbox Ghost [X]
+ui.menubar.ghost_show_player=Show Player Ghost
+ui.menubar.ghost_show_player_hitbox=Show Player Hitbox Ghost
 ui.menubar.ghost_show_holdables=Show Holdable Ghosts
-ui.menubar.ghost_clear=Clear Ghosts [Shift + C]
+ui.menubar.ghost_clear=Clear Ghosts
 ui.menubar.ghost_show_hitboxes=Show Spike and Spinner Hitboxes
 
 ui.menubar.room=Room
@@ -498,6 +501,36 @@ ui.menubar.open_storage_directory=Open Config Directory
 
 ui.menubar.not_yet_implemented=This feature is not implemented yet.
 ui.menubar.no_recent_files=No recent files.
+ui.menubar.items_cut=Cut
+ui.menubar.items_copy=Copy
+ui.menubar.items_paste=Paste
+ui.menubar.items_select_all=Select All
+ui.menubar.items_deselect=Deselect
+ui.menubar.item_area_flip_horizontal=Flip Selection Area Horizontally
+ui.menubar.item_area_flip_vertical=Flip Selection Area Vertically
+ui.menubar.item_flip_horizontal=Flip Object Horizontally
+ui.menubar.item_flip_vertical=Flip Object Vertically
+ui.menubar.item_rotate_left=Rotate Left
+ui.menubar.item_rotate_right=Rotate Right
+ui.menubar.item_add_node=Add Node
+ui.menubar.item_delete=Delete Object
+ui.menubar.decal_to_foreground=Move to Foreground (Decal)
+ui.menubar.decal_to_background=Move to Background (Decal)
+ui.menubar.add_room=Add Room
+ui.menubar.configure_room=Edit Room
+ui.menubar.delete_room=Delete Room
+ui.menubar.view_zoom_in=Zoom In
+ui.menubar.view_zoom_out=Zoom Out
+ui.menubar.toggle_coordinate_panel=Toggle Debug Tool
+ui.menubar.toggle_fullscreen=Toggle Fullscreen
+ui.menubar.toggle_previous_tool=Switch to Previous Tool
+ui.menubar.toggle_toolbar=Show/Hide Toolbar
+ui.menubar.debug_reload_entities=Reload Entities
+ui.menubar.debug_redraw_map=Redraw Map
+ui.menubar.debug_reload_tools=Reload Tools
+ui.menubar.debug_reload_everything=Reload Everything
+ui.menubar.debug_reload_lua_instance=Restart Lua Instance
+ui.menubar.debug_mode=Toggle Debug Mode
 
 # Coordinate window
 ui.coordinate_window.title=Debug Info

@@ -1207,14 +1207,14 @@ end
 function modHandler.getModNamesFromMetadata(metadata)
     if metadata then
         if #metadata == 1 and metadata[1].Name then
-            return {metadata[1].Name}
+            return {tostring(metadata[1].Name)}
 
         else
             local names = {}
 
             for _, info in ipairs(metadata) do
                 if info.Name then
-                    table.insert(names, info.Name)
+                    table.insert(names, tostring(info.Name))
                 end
             end
 

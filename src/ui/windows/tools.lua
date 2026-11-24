@@ -586,7 +586,7 @@ local function getPathTreeItems(materials, currentTool, currentLayer, favoritesL
                 segments = options.flat and {} or splitDecalPath(path),
                 displayName = (isTable and material.displayNameNoMods) or name,
                 sourceLabel = getDecalSourceLabel(language, associatedMods),
-                sourceKey = (associatedMods and associatedMods[1]) or "",
+                sourceKey = (associatedMods and associatedMods[1]) and tostring(associatedMods[1]) or "",
                 associatedMods = associatedMods,
                 tooltip = isTable and material.tooltipText or nil,
                 searchAttributes = isTable and material.searchAttributes or nil,
@@ -625,8 +625,11 @@ local function getPathTreeItems(materials, currentTool, currentLayer, favoritesL
             return lhsPriority < rhsPriority
         end
 
-        if lhs.sourceKey ~= rhs.sourceKey then
-            return lhs.sourceKey < rhs.sourceKey
+        local lhsSourceKey = tostring(lhs.sourceKey or "")
+        local rhsSourceKey = tostring(rhs.sourceKey or "")
+
+        if lhsSourceKey ~= rhsSourceKey then
+            return lhsSourceKey < rhsSourceKey
         end
 
         local lhsSegments = lhs.segments
@@ -3528,8 +3531,11 @@ local function ensurePreviewFiles(copyPrefix, folderPath, deferLoading)
     end
 
     table.sort(files, function(lhs, rhs)
-        if lhs.source ~= rhs.source then
-            return lhs.source < rhs.source
+        local lhsSource = tostring(lhs.source)
+        local rhsSource = tostring(rhs.source)
+
+        if lhsSource ~= rhsSource then
+            return lhsSource < rhsSource
         end
 
         return lhs.relative < rhs.relative
@@ -4042,8 +4048,11 @@ getMaterialItems = function(layer)
             end
 
             table.sort(files, function(lhs, rhs)
-                if lhs.source ~= rhs.source then
-                    return lhs.source < rhs.source
+                local lhsSource = tostring(lhs.source)
+                local rhsSource = tostring(rhs.source)
+
+                if lhsSource ~= rhsSource then
+                    return lhsSource < rhsSource
                 end
 
                 return lhs.relative < rhs.relative
@@ -5154,6 +5163,13 @@ local function getTileToolItems()
 
         if tool then
             local displayName = getLanguageOrDefault(toolNames[name], name)
+            local hotkeySuffix = language.ui.tools_window and language.ui.tools_window.hotkey_suffix
+            local toolHotkey = configs.hotkeys["selectTool" .. utils.humanizeVariableName(name)]
+
+            if hotkeySuffix and toolHotkey then
+                displayName = displayName .. string.format(tostring(hotkeySuffix), tostring(toolHotkey))
+            end
+
             local tooltipText = getLanguageOrDefault(toolDescriptions[name])
 
             local item = uiElements.listItem({
@@ -5320,8 +5336,16 @@ local function getToolItems(sortItems)
     local toolNames = language.tools.name
     local toolDescriptions = language.tools.description
 
+    local tileGroupName = getLanguageOrDefault(toolNames.tile, "Tile")
+    local tileGroupSuffix = language.ui.tools_window and language.ui.tools_window.hotkey_suffix
+    local tileGroupHotkey = configs.hotkeys["selectTool" .. utils.humanizeVariableName(tileToolNames[1])]
+
+    if tileGroupSuffix and tileGroupHotkey then
+        tileGroupName = tileGroupName .. string.format(tostring(tileGroupSuffix), tostring(tileGroupHotkey))
+    end
+
     local tileGroupItem = uiElements.listItem({
-        text = getLanguageOrDefault(toolNames.tile, "Tile"),
+        text = tileGroupName,
         data = "tile"
     })
 
@@ -5340,6 +5364,13 @@ local function getToolItems(sortItems)
     for name, tool in pairs(tools) do
         if not tileToolSet[name] then
             local displayName = getLanguageOrDefault(toolNames[name], name)
+            local hotkeySuffix = language.ui.tools_window and language.ui.tools_window.hotkey_suffix
+            local toolHotkey = configs.hotkeys["selectTool" .. utils.humanizeVariableName(name)]
+
+            if hotkeySuffix and toolHotkey then
+                displayName = displayName .. string.format(tostring(hotkeySuffix), tostring(toolHotkey))
+            end
+
             local tooltipText = getLanguageOrDefault(toolDescriptions[name])
 
             local item = uiElements.listItem({
@@ -5730,6 +5761,27 @@ function toolWindow.getWindow()
     -- scrollbox itself, not the column: the column also contains the search field, which must still
     -- be able to take focus.
     materialList.scrolledList.keepInputFocus = true
+
+    local defaultLayerGetIsSelected = layerList.getIsSelected
+
+    layerList.getIsSelected = function(self, element)
+        if toolHandler.currentToolName == "selection" and element.itemData and element.itemData.baseLayer then
+            local selectionTool = toolHandler.tools.selection
+
+            if selectionTool and selectionTool.isLayerSelected then
+                local baseLayer = element.itemData.baseLayer
+                local subLayer = element.itemData.subLayer
+
+                if subLayer == nil or subLayer == -1 then
+                    return selectionTool.isLayerSelected(baseLayer)
+                end
+
+                return selectionTool.isLayerSelected(baseLayer) and selectionTool.subLayer == subLayer
+            end
+        end
+
+        return defaultLayerGetIsSelected(self, element)
+    end
 
     -- The magic list scrolls by a fixed element size, which getMaterialItems keeps in sync with
     -- the current layer

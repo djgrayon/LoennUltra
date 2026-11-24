@@ -464,6 +464,11 @@ function ui.mousereleased(x, y, button, istouch, presses)
         uin.captureMouse(false)
     end
 
+    if ui.mousePresses <= 0 then
+        ui.mousePresses = 0
+        ui.draggingCounter = 1
+    end
+
     local root = ui.root
     if not root then
         return

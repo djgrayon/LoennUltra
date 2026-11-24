@@ -20,6 +20,12 @@ local viewportDevice = require("input_devices.viewport_device")
 local utils = require("utils")
 local languageRegistry = require("language_registry")
 
+local roomHotkeyUtils = require("room_hotkey_utils")
+local viewportHandler = require("viewport_handler")
+local windowUtils = require("window_utils")
+local standardHotkeys = require("standard_hotkeys")
+local toolHandler = require("tools")
+
 local roomEditor = require("ui.room_editor")
 local stylegroundEditor = require("ui.styleground_editor")
 local metadataEditor = require("ui.metadata_editor")
@@ -198,6 +204,126 @@ local function getLayoutBounds()
     return configs.debug.showLayoutBounds
 end
 
+-- Menu key -> where its activator lives, so the label shows the key the user actually has bound.
+-- Entries are either {"<configs group>", "<key>"} or {"literal", "<hardcoded activator>"}.
+local hotkeyHints = {
+    undo = {"hotkeys", "undo"},
+    redo = {"hotkeys", "redo"},
+    new = {"hotkeys", "new"},
+    open = {"hotkeys", "open"},
+    save = {"hotkeys", "save"},
+    save_as = {"hotkeys", "saveAs"},
+    view_zoom_in = {"hotkeys", "cameraZoomIn"},
+    view_zoom_out = {"hotkeys", "cameraZoomOut"},
+    view_zoom_to_extents = {"editor", "canvasZoomExtentsButton"},
+    toggle_coordinate_panel = {"hotkeys", "toggleCoordinatePanel"},
+    toggle_fullscreen = {"hotkeys", "toggleFullscreen"},
+    toggle_previous_tool = {"hotkeys", "togglePreviousTool"},
+    toggle_toolbar = {"hotkeys", "toggleToolbar"},
+    add_room = {"hotkeys", "roomAddNew"},
+    configure_room = {"hotkeys", "roomConfigureCurrent"},
+    delete_room = {"hotkeys", "roomDelete"},
+    item_flip_horizontal = {"editor", "itemFlipHorizontal"},
+    item_flip_vertical = {"editor", "itemFlipVertical"},
+    item_rotate_left = {"editor", "itemRotateLeft"},
+    item_rotate_right = {"editor", "itemRotateRight"},
+    item_add_node = {"editor", "itemAddNode"},
+    item_delete = {"editor", "itemDelete"},
+    decal_to_foreground = {"editor", "decalToForeground"},
+    decal_to_background = {"editor", "decalToBackground"},
+    items_cut = {"hotkeys", "itemsCut"},
+    items_copy = {"hotkeys", "itemsCopy"},
+    items_paste = {"hotkeys", "itemsPaste"},
+    items_select_all = {"hotkeys", "itemsSelectAll"},
+    items_deselect = {"hotkeys", "itemsDeselect"},
+    item_area_flip_horizontal = {"hotkeys", "itemAreaFlipHorizontal"},
+    item_area_flip_vertical = {"hotkeys", "itemAreaFlipVertical"},
+    ghost_show_player = {"literal", "c"},
+    ghost_show_player_hitbox = {"literal", "x"},
+    ghost_clear = {"literal", "shift + c"},
+    debug_reload_entities = {"hotkeys", "debugReloadEntities"},
+    debug_reload_tools = {"hotkeys", "debugReloadTools"},
+    debug_reload_everything = {"hotkeys", "debugReloadEverything"},
+    debug_reload_lua_instance = {"hotkeys", "debugReloadLuaInstance"},
+    debug_redraw_map = {"hotkeys", "debugRedrawMap"},
+    debug_mode = {"hotkeys", "debugMode"}
+}
+
+local function formatHotkeyValue(value, language)
+    if type(value) == "number" then
+        return string.format(tostring(language.ui.userInput.mouseButton), value)
+    end
+
+    if type(value) ~= "string" then
+        return nil
+    end
+
+    return (utils.titleCase(value):gsub("Plus", "+"):gsub("Minus", "-"))
+end
+
+local function getHotkeyHint(menuKey, language)
+    local source = hotkeyHints[menuKey]
+
+    if not source then
+        return nil
+    end
+
+    local namespace, configKey = source[1], source[2]
+
+    if namespace == "literal" then
+        return formatHotkeyValue(configKey, language)
+    end
+
+    local group = configs[namespace]
+
+    if not group then
+        return nil
+    end
+
+    return formatHotkeyValue(group[configKey], language)
+end
+
+local function notifyMenuUnavailable(messageKey)
+    sceneHandler.sendEvent("editorMenuActionUnavailable", messageKey)
+end
+
+local function withSelectionTool(action)
+    return function()
+        if toolHandler.currentToolName ~= "selection" then
+            notifyMenuUnavailable("editorMenuNeedsSelectionTool")
+            return
+        end
+
+        action(toolHandler.tools.selection)
+    end
+end
+
+local function withSelectionContext(action)
+    return function()
+        if toolHandler.currentToolName ~= "selection" then
+            notifyMenuUnavailable("editorMenuNeedsSelectionTool")
+            return
+        end
+
+        local selectionTool = toolHandler.tools.selection
+        local room = loadedState.getSelectedRoom()
+        local targets = selectionTool and selectionTool.getSelectionTargets and selectionTool.getSelectionTargets()
+
+        if not room or not targets or #targets == 0 then
+            notifyMenuUnavailable("editorMenuNeedsSelection")
+            return
+        end
+
+        action(selectionTool, room, targets)
+    end
+end
+
+local function selectionKeyAction(handlerName, configKey)
+    return withSelectionContext(function(selectionTool, room)
+        selectionTool[handlerName](room, configs.editor[configKey])
+    end)
+end
+
 local addDebug = configs.debug.enableDebugOptions
 local debugMenu = {"debug", {
     {"reload", {
@@ -240,6 +366,43 @@ menubar.menubar = {
         {"undo", history.undo},
         {"redo", history.redo},
         {},
+        {"items_cut", withSelectionTool(function(selectionTool)
+            selectionTool.cutSelection()
+        end)},
+        {"items_copy", withSelectionTool(function(selectionTool)
+            selectionTool.copySelection()
+        end)},
+        {"items_paste", withSelectionTool(function(selectionTool)
+            selectionTool.pasteSelection()
+        end)},
+        {"items_select_all", withSelectionTool(function(selectionTool)
+            selectionTool.selectAll()
+        end)},
+        {"items_deselect", withSelectionTool(function(selectionTool)
+            selectionTool.deselect()
+        end)},
+        {},
+        {"item_area_flip_horizontal", withSelectionTool(function(selectionTool)
+            selectionTool.flipSelectionAreaHorizontal()
+        end)},
+        {"item_area_flip_vertical", withSelectionTool(function(selectionTool)
+            selectionTool.flipSelectionAreaVertical()
+        end)},
+        {},
+        {"item_flip_horizontal", selectionKeyAction("handleItemFlipKeys", "itemFlipHorizontal")},
+        {"item_flip_vertical", selectionKeyAction("handleItemFlipKeys", "itemFlipVertical")},
+        {"item_rotate_left", selectionKeyAction("handleItemRotateKeys", "itemRotateLeft")},
+        {"item_rotate_right", selectionKeyAction("handleItemRotateKeys", "itemRotateRight")},
+        {"item_add_node", selectionKeyAction("handleNodeAddKey", "itemAddNode")},
+        {"item_delete", selectionKeyAction("handleItemDeletionKey", "itemDelete")},
+        {},
+        {"decal_to_foreground", selectionKeyAction("handleDecalLayerKeys", "decalToForeground")},
+        {"decal_to_background", selectionKeyAction("handleDecalLayerKeys", "decalToBackground")},
+        {},
+        {"add_room", roomHotkeyUtils.addRoom},
+        {"configure_room", roomHotkeyUtils.configureSelectedRoom},
+        {"delete_room", roomHotkeyUtils.deleteSelectedRoom},
+        {},
         {"settings", settingsEditor.editSettings},
     }},
     {"view", {
@@ -248,14 +411,33 @@ menubar.menubar = {
             {"view_depended_on_triggers", toggleOnlyShowDependencies("triggers"), "checkbox", getOnlyShowDependencies("triggers")},
             {"view_depended_on_decals", toggleOnlyShowDependencies({"decalsFg", "decalsBg"}), "checkbox", getOnlyShowDependencies({"decalsFg", "decalsBg"})},
         }},
+        {},
+        {"view_zoom_in", viewportHandler.zoomIn},
+        {"view_zoom_out", viewportHandler.zoomOut},
         {"view_zoom_to_extents", viewportDevice.zoomToExtents},
+        {},
         {"view_always_show_trigger_nodes", toggleAlwaysShowNodes, "checkbox", getAlwaysShowNodes},
         {"ghost_show_hitboxes", ghost.toggleHitboxes, "checkbox", ghost.getHitboxes},
+        {},
+        {"toggle_coordinate_panel", standardHotkeys.toggleDebugTool},
+        {"toggle_fullscreen", windowUtils.toggleFullscreen},
+        {},
+        {"toggle_previous_tool", toolHandler.selectPreviousTool},
+        {"toggle_toolbar", toolHandler.toggleToolbar},
     }},
     {"map", {
         {"metadata", metadataEditor.editMetadata},
         {"dependencies", dependencyEditor.editDependencies},
         {"save_map_image", saveMapImage},
+        {},
+        {"debug", {
+            {"debug_reload_entities", debugUtils.reloadEntities},
+            {"debug_redraw_map", debugUtils.redrawMap},
+            {"debug_reload_tools", debugUtils.reloadTools},
+            {"debug_reload_everything", debugUtils.reloadEverything},
+            {"debug_reload_lua_instance", debugUtils.restartLuaInstance},
+            {"debug_mode", debugUtils.debug},
+        }},
     }},
     {"ghost", {
         {"ghost_helper_hint", false, "hint"},
@@ -295,7 +477,14 @@ local function addLanguageStrings(menu, language)
         local languageKeyType = type(languageKey)
 
         if languageKeyType == "string" then
-            menu[1] = tostring(language.ui.menubar[languageKey])
+            local text = tostring(language.ui.menubar[languageKey])
+            local hint = getHotkeyHint(languageKey, language)
+
+            if hint then
+                text = string.format("%s (%s)", text, hint)
+            end
+
+            menu[1] = text
             menu._key = languageKey
         end
 
@@ -331,8 +520,14 @@ local function wrapInSubmenuClosers(menu)
                     end
 
                     if shouldCloseMenu ~= false then
-                        if self.parent:is("menuItemSubmenu") then
-                            self.parent:removeSelf()
+                        local submenu = self.parent
+
+                        if submenu and submenu:is("menuItemSubmenu") then
+                            if submenu.hasScrollbox and submenu.parent then
+                                submenu.parent:removeSelf()
+                            end
+
+                            submenu:removeSelf()
                         end
                     end
                 end

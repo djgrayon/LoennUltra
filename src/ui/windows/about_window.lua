@@ -6,7 +6,6 @@ local utils = require("utils")
 local widgetUtils = require("ui.widgets.utils")
 local form = require("ui.forms.form")
 local github = require("utils.github")
-local configs = require("configs")
 local meta = require("meta")
 
 local aboutWindowWrapper = require("ui.about_window_wrapper")
@@ -29,9 +28,7 @@ local aboutText = {
 }
 
 local function openReadmeUrl()
-    local author = configs.updater.githubAuthor
-    local repository = configs.updater.githubRepository
-    local url = github.getRepositoryReadmeUrl(author, repository)
+    local url = github.getRepositoryReadmeUrl("djgrayon", "LoennUltra")
 
     love.system.openURL(url)
 end

@@ -1377,6 +1377,7 @@ uie.add("menuItemSubmenu", {
         submenu.y = y + math.min(0, rootHeight - (y + height))
 
         table.insert(ui.root.children, submenu)
+        submenu.parent = ui.root
         ui.root:recollect()
         ui.root:reflow()
 

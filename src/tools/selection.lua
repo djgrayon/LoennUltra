@@ -1812,4 +1812,18 @@ function tool.unselect()
     tool.setSelectionPreviews({})
 end
 
+-- Exposed so the menu bar can run the exact same code paths the hotkeys use
+tool.copySelection = copyItemsHotkey
+tool.cutSelection = cutItemsHotkey
+tool.pasteSelection = pasteItemsHotkey
+tool.selectAll = selectAllHotkey
+tool.deselect = deselectHotkey
+tool.flipSelectionAreaHorizontal = areaFlipHotkeyCommon(true, false)
+tool.flipSelectionAreaVertical = areaFlipHotkeyCommon(false, true)
+tool.handleDecalLayerKeys = handleDecalLayerKeys
+tool.handleItemRotateKeys = handleItemRotateKeys
+tool.handleItemFlipKeys = handleItemFlipKeys
+tool.handleItemDeletionKey = handleItemDeletionKey
+tool.handleNodeAddKey = handleNodeAddKey
+
 return tool

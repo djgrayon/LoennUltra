@@ -19,9 +19,9 @@ local function getRepository()
     local author = configs.updater.githubAuthor
     local repository = configs.updater.githubRepository
 
-    if author == "CelestialCartographers" and repository == "Loenn" then
-        author = "LuckyBoy-7"
-        repository = "Loenn"
+    if author ~= "djgrayon" or repository ~= "LoennUltra" then
+        author = "djgrayon"
+        repository = "LoennUltra"
     end
 
     return author, repository

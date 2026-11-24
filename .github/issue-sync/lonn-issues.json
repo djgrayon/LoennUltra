@@ -1,190 +1,117 @@
-{
-  "labels": [
+[
     {
-      "name": "bug",
-      "color": "d73a4a",
-      "description": "功能缺陷"
+        "title":  "Linux 发行包 nfd 路径失效（加载包问题）",
+        "labels":  [
+                       "bug",
+                       "platform: linux",
+                       "priority: medium"
+                   ],
+        "milestone":  "v1.1.12",
+        "state":  "closed",
+        "body":  "**现象**：Linux 上「打开文件 / 选择目录」对话框可能失效。\n\n**根因**：`src/utils/filesystem.lua:46` 原写作 `(osUtils.getOS() == \"OS X\") and \"so\" or \"dll\"`，Linux 被判成 Windows 拿到 `.dll`；`src/utils/threads.lua:35` 也有同样的 `?.dll` 硬编码。\n\n**已修**：两处改为「非 Windows 一律 `.so`」。\n\n**待办**：用新源码重打 `LoennUltra-v1.1.12-linux.zip`，验证包内 `nfd.so` / `nfd_zenity.so` 存在、`.love` 内两处改动生效。"
     },
     {
-      "name": "enhancement",
-      "color": "0e8a16",
-      "description": "新功能或改进"
+        "title":  "还原地图内 styleground 实时预览（View 菜单缺 Stylegrounds）",
+        "labels":  [
+                       "compat",
+                       "platform: all",
+                       "priority: high"
+                   ],
+        "milestone":  "v1.1.13",
+        "body":  "**现象**：原版 Lönn 可通过 View \u003e Stylegrounds 勾选 Background / Foreground / Snap to Room / Animate，在地图上实时预览（含动态）前后景；Ultra 的 View 菜单里没有这一项。\n\n**根因**：该功能由 AnotherLoennPlugin 的 `modules/styleground_preview/main.lua` 提供，它把子菜单插到 `view_layer` 之后（`:19-20`）。Ultra 的 `9e7ee88「移除 View/Layer」` 删掉了 `view_layer` 菜单项（现在全 src 搜 `view_layer` = 0 命中，只剩语言文件里的 `ui.menubar.view_layer`）→ `index` 返回 nil → `nil + 1` 抛错 → 被 `plugin_loader` 的 pcall 吞成一条 warning → 子菜单从未创建。\n\n**方案**：\n- A) 插件侧加 `or 1` 兜底（更新即丢）\n- B) Ultra 的 View 菜单补回 `{\"view_layer\", {}}` 锚点（代价：多一个空「图层」子菜单）\n- C) 菜单渲染器加 `anchor` 类型（不显示但可被定位，约 10 行）\n\n**关联**：与「图层选择后不显示内容」很可能同源。"
     },
     {
-      "name": "compat",
-      "color": "fbca04",
-      "description": "第三方插件/兼容性"
+        "title":  "图层选择后不显示对应图层内容",
+        "labels":  [
+                       "bug",
+                       "platform: all",
+                       "priority: high"
+                   ],
+        "milestone":  "v1.1.13",
+        "state":  "closed",
+        "body":  "**现象**：在编辑器里选择某个图层（entities / triggers / decalsFg / decalsBg / tilesFg / tilesBg）后，画布上该图层的内容不显示。\n\n**待补充**：具体操作路径（工具面板的图层下拉？房间列表下方的图层按钮？），以及现象是完全空白还是缺某类元素。\n\n**怀疑同源**：`9e7ee88「移除 View/Layer」` 同时改了 `src/selections.lua`、`src/sub_layers.lua`、`src/tools/selection.lua`、`src/loaded_state.lua`，删掉了 `getLayerVisible` / `setLayerForceRender` 等函数，很可能留下回归。\n\n**排查起点**：对比 `9e7ee88^` 与当前版本的 `sub_layers.lua` / `tools/selection.lua`。"
     },
     {
-      "name": "release",
-      "color": "1d76db",
-      "description": "发版相关"
+        "title":  "启动时不自动加载任何工程，直到手动打开或载入最近地图",
+        "labels":  [
+                       "enhancement",
+                       "platform: all",
+                       "priority: low"
+                   ],
+        "milestone":  "v1.1.13",
+        "body":  "## 状态（2026-11-22）\n\n本 issue 已拆分处理：\n\n- ✅ **File \u003e 关闭** 已实现（`better-loenn` 分支，内测号 v1.1.12.9，尚未对外发布）：可关闭当前地图而不退出编辑器；有未保存改动时复用退出弹窗询问（保存并关闭 / 关闭 / 取消）；关闭后可再从「文件 \u003e 打开」载入另一张图。\n- ⏸️ **启动时不自动加载工程** 暂不实现。\n\n### 为什么暂不实现\n\n`state.map = nil` 是原版从未走过的死代码路径——原版永远加载 `persistence.lastLoadedFilename`（缺省回退到 `Content/Maps/7-Summit.bin`），因此 `editorScene:draw` 的无地图分支、UI 层、输入层都没有为它设计过。实测三轮补丁（跳过加载 / 修 `changeScene` no-op / 换字体）均无效，表现为：菜单栏延迟出现、载入地图后编辑区无法操作、关闭后残留滚动条、中文提示不显示。\n\n### 正确的做法\n\n新增一个**独立的 welcome 场景**（`scenes/` 下，`sceneHandler` 原生支持多场景），启动不加载地图时进入该场景，由它提供「打开地图 / 最近文件」入口，完全不触碰 Editor 的 `state.map`。属独立工作量，另行评估。"
     },
     {
-      "name": "platform: macos",
-      "color": "8957e5",
-      "description": ""
+        "title":  "功能不应只有快捷键：为纯快捷键功能补齐菜单入口",
+        "labels":  [
+                       "enhancement",
+                       "platform: all",
+                       "priority: medium"
+                   ],
+        "milestone":  "v1.1.13",
+        "body":  "**原则**：任何功能都必须能通过菜单访问，快捷键只作加速。\n\n**现状审计**（`src/standard_hotkeys.lua` vs `src/ui/menubar.lua`）：\n\n| 功能 | 快捷键 | 菜单入口 |\n|---|---|---|\n| 剪切 / 复制 / 粘贴 | ctrl+x / c / v | Edit 菜单里没有 |\n| 全选 / 取消选择 | ctrl+a / ctrl+shift+a | 没有 |\n| 水平 / 垂直翻转 | shift+h / shift+v | 没有 |\n| 房间移动（8 种粗细组合） | alt+方向 / ctrl+alt+方向 | 没有 |\n| 房间缩放（8 个） | 默认未绑定 | 没有 |\n| 新建 / 配置 / 删除房间 | ctrl+t / ctrl+shift+t / alt+delete | 没有 |\n| 坐标面板 | 反引号 | 没有 |\n| 调试重载（f5/f6/f7/ctrl+f5/ctrl+shift+f5） | 仅 redraw_map 在 View | 部分缺失 |\n\n**建议分批**：第一批只补 Edit 菜单的 Cut/Copy/Paste/Select All/Deselect 与翻转（最常用）；第二批补房间操作；第三批补调试项。\n---\n\n## 落地情况（v1.1.13）\n\n**原则不变：菜单可访问，快捷键只作加速。** 本版采用「全部显示 + 点击后提示」，未采用置灰方案（避免改动 OlympUI 的菜单渲染语义）。\n\n### 已完成的入口\n\n| 菜单位置 | 新增项 |\n|---|---|\n| 编辑 | 剪切 / 复制 / 粘贴 / 全选 / 取消选择 |\n| 编辑 | 翻转选区（水平 / 垂直），对应 Shift+H / Shift+V |\n| 编辑 | 水平翻转对象 / 垂直翻转对象 / 向左旋转 / 向右旋转 / 添加节点 / 删除对象 |\n| 编辑 | Decal 移到前景 / 移到背景 |\n| 编辑 | 新建房间 / 编辑房间属性 / 删除房间 |\n| 视图 | 放大 / 缩小 / 切换调试工具 / 全屏 / 切换上一个工具 / 显示隐藏工具栏 |\n| 地图 → 调试 | 重新加载实体 / 重绘地图 / 重新加载工具 / 重新加载全部 / 重启 Lua 实例 / 切换调试模式 |\n\n「切换坐标面板」这个键的实际行为早已改为「切换调试工具」（见 src/standard_hotkeys.lua 注释），菜单按实际行为命名。\n\n### 快捷键提示\n\n菜单项标题与工具栏按钮名后动态显示当前绑定的键，在设置里改键后同步变化：\n\n- 键盘键文本用 utils.titleCase()，与设置页显示用的是同一个函数\n- 鼠标键用 ui.userInput.mouseButton 模板\n- 工具栏用 ui.tools_window.hotkey_suffix（中文全角括号，英文半角）\n\n### 实现方式\n\n动作全部复用既有函数，未重写第二套：\n\n- src/tools/selection.lua 末尾导出 copySelection / cutSelection / pasteSelection / selectAll / deselect / handleItemDeletionKey / handleItemFlipKeys / handleItemRotateKeys / handleNodeAddKey / handleDecalLayerKeys / \flipSelectionAreaHorizontal|Vertical\n- src/standard_hotkeys.lua 抽出并导出 hotkeys.toggleDebugTool\n- src/tools.lua 导出 selectPreviousTool / \toggleToolbar\n- 前置条件不满足时走官方通知链路：sceneHandler.sendEvent → event_notifications.lua 的 \notificationHandlers:editorMenuActionUnavailable → 右下角通知\n\n### 明确不做\n\n- **房间移动（16 项）**：离散的格子/像素操作，放进菜单没有意义\n- **mod 纯快捷键功能**：hotkeyStruct.createHotkey(scope, activator, callback, options) 里的 options 全库未被使用，热键对象没有描述字段，Lönn 无法反推该键是做什么的\n- **对象克隆**：objectCloneButton 只在绘制类工具里生效（笔刷 / 矩形 / 油漆桶 / 直线 / 圆形 / 椭圆 / 放置），选择工具里没有 clone 代码，放进编辑菜单会点了没反应\n\n### 待验证的隐患\n\n1. **菜单变长后的子菜单滚动条**：编辑菜单从 3 项涨到 20 项，窗口高度不足时 OlympUI 会自动包一层滚动容器。\ffb1428 修复的正是「关闭子菜单只移除内层导致外层残留」这条路径，但当时只在 3 项的短菜单上验证过。需要确认：打开编辑菜单 → 点任一项 → 菜单干净关闭、无残留竖线、之后点击正常。\n2. **通知链路**：\notificationHandlers 通过 handler:with() 挂在通知窗口上，若在窗口尚未创建时触发，提示可能不显示。\n3. **设置页与菜单的格式差异**：菜单里 plus / minus 显示为 + / -，设置页仍显示 Ctrl + Plus。\n4. **1~9 工具键**：按设计只显示在工具栏，没有菜单项。\n\n### 保持 open 的原因\n\n以上 4 条隐患需要在真实使用中验证，验证通过后再关闭本 issue。"
     },
     {
-      "name": "platform: linux",
-      "color": "8957e5",
-      "description": ""
+        "title":  "macOS arm64 上 LuaJIT 的 JIT 未启用（jit false），评估能否开启",
+        "labels":  [
+                       "enhancement",
+                       "platform: macos",
+                       "priority: medium"
+                   ],
+        "milestone":  "v1.1.13",
+        "body":  "**背景**：mac arm64 原生启动已实现，日志显示 `Runtime arch: arm64 (luajit LuaJIT 2.1.1700008891, jit false)`。卡顿与保存速度已明显改善，但 `jit false` 意味着 Lua 代码逐条解释执行，纯 Lua 热点仍有很大优化空间。\n\n**已排查三条（均不成立）**：\n1. LuaJIT 不支持 arm64 —— 否，`vm_arm64.dasc`（124,009 B）存在，`lj_arch.h` 有 `LJ_TARGET_ARM64`。\n2. 编译期被 `LJ_OS_NOJIT` 关掉 —— 否，该宏只在 `LJ_TARGET_IOS || LJ_TARGET_CONSOLE` 定义。\n3. macOS hardened runtime 拦截 —— 否，`MacOS/love` 的 arm64 签名 `flags=0x20002`，`CS_RUNTIME=False`、无 entitlements。\n\n**=\u003e 最可能**：LÖVE 官方 mac 构建禁用 JIT。\n\n**验证实验**：启动早期 `pcall(jit.on)` 并打印前后 `jit.status()`；`after=true` 则可考虑正式开启（潜在 3~10 倍），`after=false` 则只能等上游。\n\n**注意**：arm64 后端可能实验性，开启后需灰度验证稳定性。"
     },
     {
-      "name": "platform: windows",
-      "color": "8957e5",
-      "description": ""
+        "title":  "首次启动的语言引导：出厂默认中文 + 非中文时首条 tip 提示",
+        "labels":  [
+                       "enhancement",
+                       "platform: all",
+                       "priority: medium"
+                   ],
+        "milestone":  "v1.1.13",
+        "state":  "closed",
+        "body":  "**目标**：新用户第一次打开就知道有中文可用。\n\n**1a 出厂默认中文（已实现）**\n`src/defaults/config/general.lua:3` 由 `language = \"en_gb\"` 改为 `\"zh_cn\"`。\n可信性：`src/ui/lang/zh_cn.lang` 在包内；`src/language_registry.lua:15-18` 查不到语言名会保持 fallback，`:20-35` 还有两层兜底，最终回退 `en_gb`；只影响首次运行（无 `loenn2-settings.conf` 的新用户）。\n\n**1b 非中文时强制首条 tip（已实现）**\n- `src/assets/loading/tips.lua` 的 `tips` 数组首位新增：`你知道吗？Loenn Ultra 已经支持中文，请在 Settings 里更改语言设置。`\n- `src/scenes/loading.lua` 新增模块级 `languageTipShown`；语言名不是 `zh_cn` 时首条固定为 `tips[1]`，每次运行只触发一次。\n\n**验证方式**：用 `--storage-directory \u003c临时目录\u003e` 起源码版模拟全新用户；或在设置里切到 English 后重启，看加载画面首条。\n\n**已知限制**：Tips 为硬编码中文（不做英文对照），英文用户也会看到中文提示——这是既定取向（本 fork 主要面向中文用户）。\n\n关闭原因：已在提交 `feat: 出厂默认中文，非中文语言时加载画面首条提示切换语言` 中实现。"
     },
     {
-      "name": "platform: all",
-      "color": "8957e5",
-      "description": ""
+        "title":  "评估：将 Loenn Searcher / CameraSim 等常用插件原生融入 Ultra",
+        "labels":  [
+                       "enhancement",
+                       "platform: all",
+                       "priority: low"
+                   ],
+        "milestone":  "v1.2.0",
+        "body":  "**动机**：常用的两个编辑器插件（搜索、相机模拟）如果能开箱自带，玩家就不必额外安装。\n\n**Loenn Searcher（自研，450 行）**\n- 文件：`loenn-flagfinder/Loenn/libraries/flag_finder.lua`（450 行 / 16,956 B）\n- 依赖 10 个 Lönn 内部模块：`ui`、`ui.elements`、`form`、`loaded_state`、`viewport_handler`、`hotkey_handler`、`ui.widgets.utils`、`ui.notification`、`ui.menubar`、`ui.window_position_persister`\n- 融入步骤：移到 `src/ui/windows/`、菜单注册进 `menubar.lua`、`Ctrl+F` 已被 `focusMaterialSearch` 占用需换键（建议 `Ctrl+Shift+F`）\n- 风险：中（外部代码进主干，UI API 变更需同步维护；该插件此前已作为独立 mod 归档）\n\n**CameraSim（第三方）**\n- 来源：`Mods/CameraSim.zip`（54,585 B）\n- Loenn 部分 7 个文件约 2,800 行（`manager.lua` 20.8KB / `triggers.lua` 20.5KB / `windows/camera_sim.lua` 33.9KB 等）\n- 另有游戏端 `Code/CameraSim.dll` + `.pdb` —— 编辑器之外玩家仍需装该 C# mod 才有实际效果\n- 风险：高（他人代码、需确认许可证、上游更新要手动同步）\n\n**建议**：先只讨论「是否接受把第三方插件纳入主干」的长期维护成本；若要推进，优先只做 Loenn Searcher。"
     },
     {
-      "name": "priority: high",
-      "color": "b60205",
-      "description": ""
+        "title":  "Loenn2 隔离目录导致旧插件静默失效（LoennExtended 的 Editor Color / AnotherLoennPlugin 的 Stylegrounds）",
+        "labels":  [
+                       "compat",
+                       "platform: all",
+                       "priority: high"
+                   ],
+        "milestone":  "v1.1.13",
+        "body":  "**现象**：Ultra 1.1.x 下，一批第三方编辑器插件的功能静默消失——菜单里没有入口、日志里没有报错，同一插件在原版 Lönn 1.0.x 上工作正常。已确认的实例：\n\n- **触发器调色（Editor Color）**：原版在 *Editing Selections* 窗口里有 `Editor Color` 一行 + 颜色选择器，Ultra 里没有。该字段由 **LoennExtended** 的 `Loenn/libraries/patches/extraAttributeOrdering.lua:12-18` 注入。\n- **View \u003e Stylegrounds（地图内前后景实时预览）**：由 **AnotherLoennPlugin** 提供，Ultra 的 View 菜单里没有这个子菜单。\n- **搜索 / 相机模拟**：`Loenn Searcher`、`CameraSim` 也没有任何入口。\n\n---\n\n## 根因（两层）\n\n**第一层：`Loenn2` 隔离目录**\n\n`src/mods.lua:34-46` 定义了 `isolatedPluginRoot = \"Loenn2\"` 与隔离类别 `tools` / `ui/windows` / `scenes`，`:108` 还把 `libraries` 一起算了进去；`getPluginRoots()` 对隔离类别**只返回 `Loenn2/`**，白名单原本只有 `AltSidesHelper`。于是除白名单外，所有 mod 的 `Loenn/libraries`、`Loenn/tools`、`Loenn/ui/windows`、`Loenn/scenes` 都不再加载。\n\n**第二层：部分插件自己写死的版本上限**\n\n即使目录通了，部分插件还会主动拒绝在 1.1.x 上工作。典型是 `LoennExtended`：\n\n```lua\n-- LoennExtended/Loenn/libraries/settings.lua\n59: local supportedLonnVersion = v(\"1.0.5\")\n60: local nextBrokenLonnVersion = v(\"1.1\")\n64:     local enabled = (currentLonnVersion \u003e= supportedLonnVersion and currentLonnVersion \u003c nextBrokenLonnVersion) or currentLonnVersion == v(\"0.0.0\")\n65:     -- crashes\n```\n\nUltra 是 `1.1.12`，`1.1.12 \u003c 1.1` 为假 ⇒ `enabled()` 返回 false ⇒ 每个 patch 文件第一行就退出（`patches/extraAttributeOrdering.lua:6-8` 的 `if not extSettings.enabled() then return {} end`）⇒ `_editorColor` 从未注入表单。\n\n---\n\n## 当前状态（2026-11-21）\n\n**✅ 大部分插件的载入问题已随代码改动解决**（`f648e37`）：`getPluginRoots` 改为「该 mod 在 `Loenn2/` 下没有这个类别，就回退读它的 `Loenn/`」。`Loenn Searcher`、`CameraSim`、`AnotherLoennPlugin` 现在都能正常加载，菜单入口也出现了（搜索器在 `Mod` 菜单里、`Alt+F` 可用，相机模拟器在「视图」菜单里）。\n\n**⚠️ 但仍有部分 mod 因为自身原因无法生效**，典型是 `LoennExtended`：它没有 `Loenn2/` 目录，目录层已经通了、`settings.lua` 确实被执行了，但插件自己的版本上限把它挡住了（见上面的第二层根因）。\n\n---\n\n## 手动解决办法（以 LoennExtended 为例，不需要命令行）\n\n\u003e 先说结论：要让 `Editor Color` 出现，只要把插件自己写死的版本上限从 `1.1` 改成 `1.2`。全程用鼠标 + 记事本就能完成。\n\n**第 1 步：找到 mod 文件**\n\n打开 Celeste 的 mod 目录，通常是：\n\n```\nSteam\\steamapps\\common\\Celeste\\Mods\n```\n\n在其中找到 **`LoennExtended.zip`**。\n\n**第 2 步：先备份一份**\n\n把 `LoennExtended.zip` 复制一份到桌面（或者改名为 `LoennExtended.zip.bak` 留在原地也行）。**改坏了要靠它还原。**\n\n**第 3 步：解压成文件夹**\n\n右键 `LoennExtended.zip` → 「解压到当前文件夹」/「全部解压缩」（WinRAR / 7-Zip / 系统自带都可以）。解压完会多出一个名为 **`LoennExtended`** 的文件夹，里面应该有 `Loenn`、`everest.yaml` 等。\n\n**第 4 步：把原来的 zip 移走**\n\n把 `LoennExtended.zip` **删掉或移到别处**（比如移到桌面）。**必须移走**——否则 zip 和同名文件夹同时存在，游戏会分不清用哪个。\n\n**第 5 步：打开要改的文件**\n\n依次进入：\n\n```\nLoennExtended\\Loenn\\libraries\n```\n\n找到 **`settings.lua`**，右键 →「打开方式」→「记事本」。\n\n**第 6 步：改一行**\n\n在记事本里按 `Ctrl+F` 搜索：\n\n```\nnextBrokenLonnVersion\n```\n\n会找到这样一行：\n\n```lua\nlocal nextBrokenLonnVersion = v(\"1.1\")\n```\n\n把里面的 **`1.1` 改成 `1.2`**，变成：\n\n```lua\nlocal nextBrokenLonnVersion = v(\"1.2\")\n```\n\n**只改这两个字符，别动其它地方。**\n\n**第 7 步：保存并重启**\n\n按 `Ctrl+S` 保存，关闭记事本，然后**重启 Lönn**。\n\n**第 8 步：验证**\n\n在地图里选中任意一个触发器，打开「Editing Selections」窗口——`Width` / `Height` 下面应该多出一行 **`Editor Color`** 和一个颜色方块。点它换色，触发器在图上的边框颜色会跟着变。\n\n**如果 Lönn 崩溃或功能异常，怎么还原：**\n\n1. 打开 `Mods` 文件夹，把 `LoennExtended` 这个**文件夹整个删掉**；\n2. 把第 2 步备份的 `LoennExtended.zip`（或把 `LoennExtended.zip.bak` 改回 `LoennExtended.zip`）放回 `Mods` 文件夹；\n3. 重启 Lönn 即可恢复原样。\n\n---\n\n## 为什么 Ultra 侧不直接修\n\n插件是在拿到 `meta.version` 之后**自己**决定不工作的。要绕过只能给插件伪造版本号，而 `meta.version` 是全局共享模块，伪造会同时影响所有做版本检查的插件，风险远大于收益。\n\n**合理的长期方向**（供上游参考）：\n\n1. `Loenn2` 隔离提供迁移文档或运行时提示（目前插件被跳过时 `run.log` 一行都不写，用户完全不知道发生了什么）；\n2. 为插件提供「兼容版本覆盖」开关，允许用户显式声明「我知道这个插件没适配 1.1，但仍要加载」；\n3. README 里列出「已适配 Loenn2」与「尚未适配」的插件清单。\n\n\u003c!-- loenn2-manual-fix-2026-11-21 --\u003e"
     },
     {
-      "name": "priority: medium",
-      "color": "d93f0b",
-      "description": ""
+        "title":  "只提供 en_gb.lang 的插件在中文界面下全部显示 %unknown%",
+        "labels":  [
+                       "bug",
+                       "platform: all",
+                       "priority: high"
+                   ],
+        "milestone":  "v1.1.12",
+        "state":  "closed",
+        "body":  "**现象**：界面设为中文后，所有只提供 `en_gb.lang` 的第三方插件（`AltSidesHelper` 的元数据窗口、`AnotherLoennPlugin` 的 Stylegrounds 子项、`CameraSim` 的视图菜单项等）全部显示成 `%unknown%`；Ultra 自身的中文界面正常，插件也能正常打开。\n\n**根因**：`src/scenes/startup.lua:63` 写的是\n\n```lua\nlanguageRegistry.setFallbackLanguage(defaultConfig.general.language)\n```\n\n而 `defaultConfig.general.language` 已被改为 `zh_cn`（\"出厂默认中文\"那条改动）。于是**当前语言和 fallback 都是 `zh_cn`**，插件只提供 `en_gb.lang`，`utils/lang.lua:31-42` 的 `lang_mt.__index` 到 fallback 里也找不到，返回 `nil_lang`，其 `__tostring` 得到 `%unknown%`（`utils/lang.lua:11-20`）。\n\n原版 Lönn 1.0.10 的 `startup.lua` 没有这行 `setFallbackLanguage`，所以原版不受影响。\n\n**修法**：fallback 固定为 `en_gb`——`en_gb.lang` 是本体与所有插件的基础语言，不该跟着\"默认语言\"走。\n\n**判据**：\n- 中文界面下 `AltSidesHelper` 元数据窗口里 `Preset` / `UnlockMode` / `Icon` / `Label` 等变成正常英文；\n- `CameraSim` 的视图菜单项显示\"镜头模拟器\"（它自带 `zh_cn.lang`）；\n- `AnotherLoennPlugin` 的 Stylegrounds 子项显示 `Background` / `Foreground` / `Snap to Room` / `Animate`（英文，因为该插件只提供 en_gb）。"
     },
     {
-      "name": "priority: low",
-      "color": "c2e0c6",
-      "description": ""
+        "title":  "bucket all rooms 模式：批量填充后撤销只回退部分房间",
+        "labels":  [
+                       "bug",
+                       "platform: all",
+                       "priority: high"
+                   ],
+        "milestone":  "v1.1.13",
+        "state":  "closed",
+        "body":  "## 现象（用户实测）\n\n**bucket（油漆桶）工具的 all rooms 模式**下执行一次批量换砖后：\n\n\u003e 按一次撤销（Ctrl+Z），**只有部分房间的砖被回退**，其余房间保持被填充后的状态，撤不回来。\n\n因为一次操作会影响**整张图所有房间**，撤销不完整就等于「**误操作不可恢复**」—— 一旦保存，改动不可逆。\n\n## 背景：为什么会被\"填满 air\"（这是现有设计，不是缺陷）\n\n`all rooms` 模式的语义是「**按 tile id 批量替换**」——点中某个砖，就把**所有房间里所有相同的砖**替换成当前选中的砖。\n\n`src\\tools\\bucket.lua:175-187`：\n\n```lua\nif tool.mode == \"allRooms\" then\n    local clickedMaterial = tilesMatrix:get(tx + 1, ty + 1)\n\n    if clickedMaterial and clickedMaterial ~= \"\" then      -- 只排除了空字符串\n        ...\n        handleAllRoomsClick(clickedMaterial)\n    end\n```\n\n而 **air 在 tile 矩阵里的表示是 `\" \"`（一个空格），不是 `\"\"`**（三条证据：`bucket.lua:130` 自己用 `matrixLib.filled(\" \", ...)` 表示\"不改\"；`src\\brushes.lua:28` 用 `mat ~= \" \"` 跳过空格；`src\\tiles.lua:96-98` 的注释明确说空格是空 tile）。\n\n⇒ 点一个 air 格子时 `clickedMaterial == \" \"`，**通过 `~= \"\"` 检查** ⇒ 进入 `handleAllRoomsClick(\" \")` ⇒ 所有房间的所有 air 都被填成当前砖。\n\n**这符合 all rooms 模式的设计语义**（air 也是一种 tile id），所以**不算 bug**。\n**可以顺带做的 UX 改进（可选）**：在 `:178` 补上 `and clickedMaterial ~= \" \"`，或对\"替换目标是 air\"时给二次确认 —— 但这属于\"防止误操作\"，不是\"修 bug\"。\n\n## 核心 Bug：撤销覆盖不全（这才是要修的）\n\n### 代码现状（看起来应该是完整的）\n\n`src\\tools\\bucket.lua:121-161` 的 `handleAllRoomsClick` **明确是每个改动过的房间都记录快照、最后合成一个 `multiSnapshot`**：\n\n```lua\nfor _, targetRoom in ipairs(rooms) do\n    ...\n    if changed then\n        local before = tiles.getRoomTileSnapshotValue(targetRoom, tool.layer)\n        brushHelper.placeTile(targetRoom, 1, 1, matrix, tool.layer)\n        celesteRender.forceRedrawRoom(targetRoom, state, targetRoom == state.getSelectedRoom())\n        local after = tiles.getRoomTileSnapshotValue(targetRoom, tool.layer)\n        table.insert(snapshots, snapshotUtils.roomTilesSnapshot(targetRoom, tool.layer, \"Bucket\", before, after))\n    end\nend\n\nif #snapshots \u003e 0 then\n    history.addSnapshot(snapshotUtils.multiSnapshot(\"Bucket\", snapshots))\nend\n```\n\n`src\\snapshot_utils.lua:238-256` 的 `multiSnapshot` 也逐个回放：\n\n```lua\nlocal function backward(data)\n    for i = #snapshots, 1, -1 do\n        local snap = snapshots[i]\n        snap.backward(snap.data)\n    end\nend\n```\n\n**⇒ 从代码上看应该一次能撤回所有房间，实际却不是。所以这是预料之外的 bug。**\n\n### 三个可疑方向（待复现收窄）\n\n1. **快照值是最小化后的矩阵**：`src\\tiles.lua:82-94` 的 `getRoomTileSnapshotValue` 用 `matrixToTileStringMinimized` 生成快照，宽高取的是**最小化后**的尺寸；`tiles.lua:96-98` 的注释也提到恢复时要补回 `\" \"`。若某房间四周都是 air，恢复时可能只还原中间一小块、其余变 air —— **表现可能被误读成\"只撤了中间的砖\"**。\n2. **同一次点击触发多次填充**：`bucket.lua:179-186` 的防重签名会被 `mousemoved`（`:244` `lastAllRoomsClick = nil`）重置 ⇒ 同一次操作产生多份历史 ⇒ 按一次 Ctrl+Z 只退掉其中一层。\n3. **房间没有该层时快照为 nil**：若某房间 `getRoomTileSnapshotValue` 返回 `nil`，`tiles.restoreRoomSnapshotValue(nil)` 返回 `nil`，`targetRoom[layer].matrix = nil` 可能让该房间后续绘制/保存异常。\n\n### 修复方向（明天再做）\n\n1. **先复现并记录**：点一次 air 填满全图 → 按一次 Ctrl+Z → 截图/记录\"哪些房间回退了、哪些没回退、回退的是否内容正确\"。\n2. 按现象收窄到上面三个方向之一。\n3. 修完要验证：**一次操作 → 一次撤销 → 所有受影响房间完全复原**（可用 bin2json 对比操作前后两个版本的地图 JSON）。\n"
     }
-  ],
-  "milestones": [
-    {
-      "title": "v1.1.12",
-      "description": ""
-    },
-    {
-      "title": "v1.1.13",
-      "description": ""
-    },
-    {
-      "title": "v1.2.0",
-      "description": ""
-    }
-  ],
-  "issues": [
-    {
-      "title": "Linux 发行包 nfd 路径失效（加载包问题）",
-      "labels": [
-        "bug",
-        "platform: linux",
-        "priority: medium"
-      ],
-      "milestone": "v1.1.12",
-      "state": "closed",
-      "body": "**现象**：Linux 上「打开文件 / 选择目录」对话框可能失效。\n\n**根因**：`src/utils/filesystem.lua:46` 原写作 `(osUtils.getOS() == \"OS X\") and \"so\" or \"dll\"`，Linux 被判成 Windows 拿到 `.dll`；`src/utils/threads.lua:35` 也有同样的 `?.dll` 硬编码。\n\n**已修**：两处改为「非 Windows 一律 `.so`」。\n\n**待办**：用新源码重打 `LoennUltra-v1.1.12-linux.zip`，验证包内 `nfd.so` / `nfd_zenity.so` 存在、`.love` 内两处改动生效。"
-    },
-    {
-      "title": "还原地图内 styleground 实时预览（View 菜单缺 Stylegrounds）",
-      "labels": [
-        "compat",
-        "platform: all",
-        "priority: high"
-      ],
-      "milestone": "v1.1.13",
-      "body": "**现象**：原版 Lönn 可通过 View > Stylegrounds 勾选 Background / Foreground / Snap to Room / Animate，在地图上实时预览（含动态）前后景；Ultra 的 View 菜单里没有这一项。\n\n**根因**：该功能由 AnotherLoennPlugin 的 `modules/styleground_preview/main.lua` 提供，它把子菜单插到 `view_layer` 之后（`:19-20`）。Ultra 的 `9e7ee88「移除 View/Layer」` 删掉了 `view_layer` 菜单项（现在全 src 搜 `view_layer` = 0 命中，只剩语言文件里的 `ui.menubar.view_layer`）→ `index` 返回 nil → `nil + 1` 抛错 → 被 `plugin_loader` 的 pcall 吞成一条 warning → 子菜单从未创建。\n\n**方案**：\n- A) 插件侧加 `or 1` 兜底（更新即丢）\n- B) Ultra 的 View 菜单补回 `{\"view_layer\", {}}` 锚点（代价：多一个空「图层」子菜单）\n- C) 菜单渲染器加 `anchor` 类型（不显示但可被定位，约 10 行）\n\n**关联**：与「图层选择后不显示内容」很可能同源。"
-    },
-    {
-      "title": "图层选择后不显示对应图层内容",
-      "labels": [
-        "bug",
-        "platform: all",
-        "priority: high"
-      ],
-      "milestone": "v1.1.13",
-      "state": "closed",
-      "body": "**现象**：在编辑器里选择某个图层（entities / triggers / decalsFg / decalsBg / tilesFg / tilesBg）后，画布上该图层的内容不显示。\n\n**待补充**：具体操作路径（工具面板的图层下拉？房间列表下方的图层按钮？），以及现象是完全空白还是缺某类元素。\n\n**怀疑同源**：`9e7ee88「移除 View/Layer」` 同时改了 `src/selections.lua`、`src/sub_layers.lua`、`src/tools/selection.lua`、`src/loaded_state.lua`，删掉了 `getLayerVisible` / `setLayerForceRender` 等函数，很可能留下回归。\n\n**排查起点**：对比 `9e7ee88^` 与当前版本的 `sub_layers.lua` / `tools/selection.lua`。"
-    },
-    {
-      "title": "启动时不自动加载任何工程，直到手动打开或载入最近地图",
-      "labels": [
-        "enhancement",
-        "platform: all",
-        "priority: low"
-      ],
-      "milestone": "v1.1.13",
-      "body": "## 状态（2026-11-22）\n\n本 issue 已拆分处理：\n\n- ✅ **File > 关闭** 已实现（`better-loenn` 分支，内测号 v1.1.12.9，尚未对外发布）：可关闭当前地图而不退出编辑器；有未保存改动时复用退出弹窗询问（保存并关闭 / 关闭 / 取消）；关闭后可再从「文件 > 打开」载入另一张图。\n- ⏸️ **启动时不自动加载工程** 暂不实现。\n\n### 为什么暂不实现\n\n`state.map = nil` 是原版从未走过的死代码路径——原版永远加载 `persistence.lastLoadedFilename`（缺省回退到 `Content/Maps/7-Summit.bin`），因此 `editorScene:draw` 的无地图分支、UI 层、输入层都没有为它设计过。实测三轮补丁（跳过加载 / 修 `changeScene` no-op / 换字体）均无效，表现为：菜单栏延迟出现、载入地图后编辑区无法操作、关闭后残留滚动条、中文提示不显示。\n\n### 正确的做法\n\n新增一个**独立的 welcome 场景**（`scenes/` 下，`sceneHandler` 原生支持多场景），启动不加载地图时进入该场景，由它提供「打开地图 / 最近文件」入口，完全不触碰 Editor 的 `state.map`。属独立工作量，另行评估。"
-    },
-    {
-      "title": "功能不应只有快捷键：为纯快捷键功能补齐菜单入口",
-      "labels": [
-        "enhancement",
-        "platform: all",
-        "priority: medium"
-      ],
-      "milestone": "v1.1.13",
-      "body": "**原则**：任何功能都必须能通过菜单访问，快捷键只作加速。\n\n**现状审计**（`src/standard_hotkeys.lua` vs `src/ui/menubar.lua`）：\n\n| 功能 | 快捷键 | 菜单入口 |\n|---|---|---|\n| 剪切 / 复制 / 粘贴 | ctrl+x / c / v | Edit 菜单里没有 |\n| 全选 / 取消选择 | ctrl+a / ctrl+shift+a | 没有 |\n| 水平 / 垂直翻转 | shift+h / shift+v | 没有 |\n| 房间移动（8 种粗细组合） | alt+方向 / ctrl+alt+方向 | 没有 |\n| 房间缩放（8 个） | 默认未绑定 | 没有 |\n| 新建 / 配置 / 删除房间 | ctrl+t / ctrl+shift+t / alt+delete | 没有 |\n| 坐标面板 | 反引号 | 没有 |\n| 调试重载（f5/f6/f7/ctrl+f5/ctrl+shift+f5） | 仅 redraw_map 在 View | 部分缺失 |\n\n**建议分批**：第一批只补 Edit 菜单的 Cut/Copy/Paste/Select All/Deselect 与翻转（最常用）；第二批补房间操作；第三批补调试项。"
-    },
-    {
-      "title": "macOS arm64 上 LuaJIT 的 JIT 未启用（jit false），评估能否开启",
-      "labels": [
-        "enhancement",
-        "platform: macos",
-        "priority: medium"
-      ],
-      "milestone": "v1.1.13",
-      "body": "**背景**：mac arm64 原生启动已实现，日志显示 `Runtime arch: arm64 (luajit LuaJIT 2.1.1700008891, jit false)`。卡顿与保存速度已明显改善，但 `jit false` 意味着 Lua 代码逐条解释执行，纯 Lua 热点仍有很大优化空间。\n\n**已排查三条（均不成立）**：\n1. LuaJIT 不支持 arm64 —— 否，`vm_arm64.dasc`（124,009 B）存在，`lj_arch.h` 有 `LJ_TARGET_ARM64`。\n2. 编译期被 `LJ_OS_NOJIT` 关掉 —— 否，该宏只在 `LJ_TARGET_IOS || LJ_TARGET_CONSOLE` 定义。\n3. macOS hardened runtime 拦截 —— 否，`MacOS/love` 的 arm64 签名 `flags=0x20002`，`CS_RUNTIME=False`、无 entitlements。\n\n**=> 最可能**：LÖVE 官方 mac 构建禁用 JIT。\n\n**验证实验**：启动早期 `pcall(jit.on)` 并打印前后 `jit.status()`；`after=true` 则可考虑正式开启（潜在 3~10 倍），`after=false` 则只能等上游。\n\n**注意**：arm64 后端可能实验性，开启后需灰度验证稳定性。"
-    },
-    {
-      "title": "首次启动的语言引导：出厂默认中文 + 非中文时首条 tip 提示",
-      "labels": [
-        "enhancement",
-        "platform: all",
-        "priority: medium"
-      ],
-      "milestone": "v1.1.13",
-      "state": "closed",
-      "body": "**目标**：新用户第一次打开就知道有中文可用。\n\n**1a 出厂默认中文（已实现）**\n`src/defaults/config/general.lua:3` 由 `language = \"en_gb\"` 改为 `\"zh_cn\"`。\n可信性：`src/ui/lang/zh_cn.lang` 在包内；`src/language_registry.lua:15-18` 查不到语言名会保持 fallback，`:20-35` 还有两层兜底，最终回退 `en_gb`；只影响首次运行（无 `loenn2-settings.conf` 的新用户）。\n\n**1b 非中文时强制首条 tip（已实现）**\n- `src/assets/loading/tips.lua` 的 `tips` 数组首位新增：`你知道吗？Loenn Ultra 已经支持中文，请在 Settings 里更改语言设置。`\n- `src/scenes/loading.lua` 新增模块级 `languageTipShown`；语言名不是 `zh_cn` 时首条固定为 `tips[1]`，每次运行只触发一次。\n\n**验证方式**：用 `--storage-directory <临时目录>` 起源码版模拟全新用户；或在设置里切到 English 后重启，看加载画面首条。\n\n**已知限制**：Tips 为硬编码中文（不做英文对照），英文用户也会看到中文提示——这是既定取向（本 fork 主要面向中文用户）。\n\n关闭原因：已在提交 `feat: 出厂默认中文，非中文语言时加载画面首条提示切换语言` 中实现。"
-    },
-    {
-      "title": "评估：将 Loenn Searcher / CameraSim 等常用插件原生融入 Ultra",
-      "labels": [
-        "enhancement",
-        "platform: all",
-        "priority: low"
-      ],
-      "milestone": "v1.2.0",
-      "body": "**动机**：常用的两个编辑器插件（搜索、相机模拟）如果能开箱自带，玩家就不必额外安装。\n\n**Loenn Searcher（自研，450 行）**\n- 文件：`loenn-flagfinder/Loenn/libraries/flag_finder.lua`（450 行 / 16,956 B）\n- 依赖 10 个 Lönn 内部模块：`ui`、`ui.elements`、`form`、`loaded_state`、`viewport_handler`、`hotkey_handler`、`ui.widgets.utils`、`ui.notification`、`ui.menubar`、`ui.window_position_persister`\n- 融入步骤：移到 `src/ui/windows/`、菜单注册进 `menubar.lua`、`Ctrl+F` 已被 `focusMaterialSearch` 占用需换键（建议 `Ctrl+Shift+F`）\n- 风险：中（外部代码进主干，UI API 变更需同步维护；该插件此前已作为独立 mod 归档）\n\n**CameraSim（第三方）**\n- 来源：`Mods/CameraSim.zip`（54,585 B）\n- Loenn 部分 7 个文件约 2,800 行（`manager.lua` 20.8KB / `triggers.lua` 20.5KB / `windows/camera_sim.lua` 33.9KB 等）\n- 另有游戏端 `Code/CameraSim.dll` + `.pdb` —— 编辑器之外玩家仍需装该 C# mod 才有实际效果\n- 风险：高（他人代码、需确认许可证、上游更新要手动同步）\n\n**建议**：先只讨论「是否接受把第三方插件纳入主干」的长期维护成本；若要推进，优先只做 Loenn Searcher。"
-    },
-    {
-      "title": "Loenn2 隔离目录导致旧插件静默失效（LoennExtended 的 Editor Color / AnotherLoennPlugin 的 Stylegrounds）",
-      "labels": [
-        "compat",
-        "platform: all",
-        "priority: high"
-      ],
-      "milestone": "v1.1.13",
-      "body": "**现象**：Ultra 1.1.x 下，一批第三方编辑器插件的功能静默消失——菜单里没有入口、日志里没有报错，同一插件在原版 Lönn 1.0.x 上工作正常。已确认的实例：\n\n- **触发器调色（Editor Color）**：原版在 *Editing Selections* 窗口里有 `Editor Color` 一行 + 颜色选择器，Ultra 里没有。该字段由 **LoennExtended** 的 `Loenn/libraries/patches/extraAttributeOrdering.lua:12-18` 注入。\n- **View > Stylegrounds（地图内前后景实时预览）**：由 **AnotherLoennPlugin** 提供，Ultra 的 View 菜单里没有这个子菜单。\n- **搜索 / 相机模拟**：`Loenn Searcher`、`CameraSim` 也没有任何入口。\n\n---\n\n## 根因（两层）\n\n**第一层：`Loenn2` 隔离目录**\n\n`src/mods.lua:34-46` 定义了 `isolatedPluginRoot = \"Loenn2\"` 与隔离类别 `tools` / `ui/windows` / `scenes`，`:108` 还把 `libraries` 一起算了进去；`getPluginRoots()` 对隔离类别**只返回 `Loenn2/`**，白名单原本只有 `AltSidesHelper`。于是除白名单外，所有 mod 的 `Loenn/libraries`、`Loenn/tools`、`Loenn/ui/windows`、`Loenn/scenes` 都不再加载。\n\n**第二层：部分插件自己写死的版本上限**\n\n即使目录通了，部分插件还会主动拒绝在 1.1.x 上工作。典型是 `LoennExtended`：\n\n```lua\n-- LoennExtended/Loenn/libraries/settings.lua\n59: local supportedLonnVersion = v(\"1.0.5\")\n60: local nextBrokenLonnVersion = v(\"1.1\")\n64:     local enabled = (currentLonnVersion >= supportedLonnVersion and currentLonnVersion < nextBrokenLonnVersion) or currentLonnVersion == v(\"0.0.0\")\n65:     -- crashes\n```\n\nUltra 是 `1.1.12`，`1.1.12 < 1.1` 为假 ⇒ `enabled()` 返回 false ⇒ 每个 patch 文件第一行就退出（`patches/extraAttributeOrdering.lua:6-8` 的 `if not extSettings.enabled() then return {} end`）⇒ `_editorColor` 从未注入表单。\n\n---\n\n## 当前状态（2026-11-21）\n\n**✅ 大部分插件的载入问题已随代码改动解决**（`f648e37`）：`getPluginRoots` 改为「该 mod 在 `Loenn2/` 下没有这个类别，就回退读它的 `Loenn/`」。`Loenn Searcher`、`CameraSim`、`AnotherLoennPlugin` 现在都能正常加载，菜单入口也出现了（搜索器在 `Mod` 菜单里、`Alt+F` 可用，相机模拟器在「视图」菜单里）。\n\n**⚠️ 但仍有部分 mod 因为自身原因无法生效**，典型是 `LoennExtended`：它没有 `Loenn2/` 目录，目录层已经通了、`settings.lua` 确实被执行了，但插件自己的版本上限把它挡住了（见上面的第二层根因）。\n\n---\n\n## 手动解决办法（以 LoennExtended 为例，不需要命令行）\n\n> 先说结论：要让 `Editor Color` 出现，只要把插件自己写死的版本上限从 `1.1` 改成 `1.2`。全程用鼠标 + 记事本就能完成。\n\n**第 1 步：找到 mod 文件**\n\n打开 Celeste 的 mod 目录，通常是：\n\n```\nSteam\\steamapps\\common\\Celeste\\Mods\n```\n\n在其中找到 **`LoennExtended.zip`**。\n\n**第 2 步：先备份一份**\n\n把 `LoennExtended.zip` 复制一份到桌面（或者改名为 `LoennExtended.zip.bak` 留在原地也行）。**改坏了要靠它还原。**\n\n**第 3 步：解压成文件夹**\n\n右键 `LoennExtended.zip` → 「解压到当前文件夹」/「全部解压缩」（WinRAR / 7-Zip / 系统自带都可以）。解压完会多出一个名为 **`LoennExtended`** 的文件夹，里面应该有 `Loenn`、`everest.yaml` 等。\n\n**第 4 步：把原来的 zip 移走**\n\n把 `LoennExtended.zip` **删掉或移到别处**（比如移到桌面）。**必须移走**——否则 zip 和同名文件夹同时存在，游戏会分不清用哪个。\n\n**第 5 步：打开要改的文件**\n\n依次进入：\n\n```\nLoennExtended\\Loenn\\libraries\n```\n\n找到 **`settings.lua`**，右键 →「打开方式」→「记事本」。\n\n**第 6 步：改一行**\n\n在记事本里按 `Ctrl+F` 搜索：\n\n```\nnextBrokenLonnVersion\n```\n\n会找到这样一行：\n\n```lua\nlocal nextBrokenLonnVersion = v(\"1.1\")\n```\n\n把里面的 **`1.1` 改成 `1.2`**，变成：\n\n```lua\nlocal nextBrokenLonnVersion = v(\"1.2\")\n```\n\n**只改这两个字符，别动其它地方。**\n\n**第 7 步：保存并重启**\n\n按 `Ctrl+S` 保存，关闭记事本，然后**重启 Lönn**。\n\n**第 8 步：验证**\n\n在地图里选中任意一个触发器，打开「Editing Selections」窗口——`Width` / `Height` 下面应该多出一行 **`Editor Color`** 和一个颜色方块。点它换色，触发器在图上的边框颜色会跟着变。\n\n**如果 Lönn 崩溃或功能异常，怎么还原：**\n\n1. 打开 `Mods` 文件夹，把 `LoennExtended` 这个**文件夹整个删掉**；\n2. 把第 2 步备份的 `LoennExtended.zip`（或把 `LoennExtended.zip.bak` 改回 `LoennExtended.zip`）放回 `Mods` 文件夹；\n3. 重启 Lönn 即可恢复原样。\n\n---\n\n## 为什么 Ultra 侧不直接修\n\n插件是在拿到 `meta.version` 之后**自己**决定不工作的。要绕过只能给插件伪造版本号，而 `meta.version` 是全局共享模块，伪造会同时影响所有做版本检查的插件，风险远大于收益。\n\n**合理的长期方向**（供上游参考）：\n\n1. `Loenn2` 隔离提供迁移文档或运行时提示（目前插件被跳过时 `run.log` 一行都不写，用户完全不知道发生了什么）；\n2. 为插件提供「兼容版本覆盖」开关，允许用户显式声明「我知道这个插件没适配 1.1，但仍要加载」；\n3. README 里列出「已适配 Loenn2」与「尚未适配」的插件清单。\n\n<!-- loenn2-manual-fix-2026-11-21 -->"
-    },
-    {
-      "title": "只提供 en_gb.lang 的插件在中文界面下全部显示 %unknown%",
-      "labels": [
-        "bug",
-        "platform: all",
-        "priority: high"
-      ],
-      "milestone": "v1.1.12",
-      "state": "closed",
-      "body": "**现象**：界面设为中文后，所有只提供 `en_gb.lang` 的第三方插件（`AltSidesHelper` 的元数据窗口、`AnotherLoennPlugin` 的 Stylegrounds 子项、`CameraSim` 的视图菜单项等）全部显示成 `%unknown%`；Ultra 自身的中文界面正常，插件也能正常打开。\n\n**根因**：`src/scenes/startup.lua:63` 写的是\n\n```lua\nlanguageRegistry.setFallbackLanguage(defaultConfig.general.language)\n```\n\n而 `defaultConfig.general.language` 已被改为 `zh_cn`（\"出厂默认中文\"那条改动）。于是**当前语言和 fallback 都是 `zh_cn`**，插件只提供 `en_gb.lang`，`utils/lang.lua:31-42` 的 `lang_mt.__index` 到 fallback 里也找不到，返回 `nil_lang`，其 `__tostring` 得到 `%unknown%`（`utils/lang.lua:11-20`）。\n\n原版 Lönn 1.0.10 的 `startup.lua` 没有这行 `setFallbackLanguage`，所以原版不受影响。\n\n**修法**：fallback 固定为 `en_gb`——`en_gb.lang` 是本体与所有插件的基础语言，不该跟着\"默认语言\"走。\n\n**判据**：\n- 中文界面下 `AltSidesHelper` 元数据窗口里 `Preset` / `UnlockMode` / `Icon` / `Label` 等变成正常英文；\n- `CameraSim` 的视图菜单项显示\"镜头模拟器\"（它自带 `zh_cn.lang`）；\n- `AnotherLoennPlugin` 的 Stylegrounds 子项显示 `Background` / `Foreground` / `Snap to Room` / `Animate`（英文，因为该插件只提供 en_gb）。"
-    },
-    {
-      "title": "bucket all rooms 模式：批量填充后撤销只回退部分房间",
-      "labels": [
-        "bug",
-        "platform: all",
-        "priority: high"
-      ],
-      "milestone": "v1.1.13",
-      "state": "closed",
-      "body": "## 现象（用户实测）\n\n**bucket（油漆桶）工具的 all rooms 模式**下执行一次批量换砖后：\n\n> 按一次撤销（Ctrl+Z），**只有部分房间的砖被回退**，其余房间保持被填充后的状态，撤不回来。\n\n因为一次操作会影响**整张图所有房间**，撤销不完整就等于「**误操作不可恢复**」—— 一旦保存，改动不可逆。\n\n## 背景：为什么会被\"填满 air\"（这是现有设计，不是缺陷）\n\n`all rooms` 模式的语义是「**按 tile id 批量替换**」——点中某个砖，就把**所有房间里所有相同的砖**替换成当前选中的砖。\n\n`src\\tools\\bucket.lua:175-187`：\n\n```lua\nif tool.mode == \"allRooms\" then\n    local clickedMaterial = tilesMatrix:get(tx + 1, ty + 1)\n\n    if clickedMaterial and clickedMaterial ~= \"\" then      -- 只排除了空字符串\n        ...\n        handleAllRoomsClick(clickedMaterial)\n    end\n```\n\n而 **air 在 tile 矩阵里的表示是 `\" \"`（一个空格），不是 `\"\"`**（三条证据：`bucket.lua:130` 自己用 `matrixLib.filled(\" \", ...)` 表示\"不改\"；`src\\brushes.lua:28` 用 `mat ~= \" \"` 跳过空格；`src\\tiles.lua:96-98` 的注释明确说空格是空 tile）。\n\n⇒ 点一个 air 格子时 `clickedMaterial == \" \"`，**通过 `~= \"\"` 检查** ⇒ 进入 `handleAllRoomsClick(\" \")` ⇒ 所有房间的所有 air 都被填成当前砖。\n\n**这符合 all rooms 模式的设计语义**（air 也是一种 tile id），所以**不算 bug**。\n**可以顺带做的 UX 改进（可选）**：在 `:178` 补上 `and clickedMaterial ~= \" \"`，或对\"替换目标是 air\"时给二次确认 —— 但这属于\"防止误操作\"，不是\"修 bug\"。\n\n## 核心 Bug：撤销覆盖不全（这才是要修的）\n\n### 代码现状（看起来应该是完整的）\n\n`src\\tools\\bucket.lua:121-161` 的 `handleAllRoomsClick` **明确是每个改动过的房间都记录快照、最后合成一个 `multiSnapshot`**：\n\n```lua\nfor _, targetRoom in ipairs(rooms) do\n    ...\n    if changed then\n        local before = tiles.getRoomTileSnapshotValue(targetRoom, tool.layer)\n        brushHelper.placeTile(targetRoom, 1, 1, matrix, tool.layer)\n        celesteRender.forceRedrawRoom(targetRoom, state, targetRoom == state.getSelectedRoom())\n        local after = tiles.getRoomTileSnapshotValue(targetRoom, tool.layer)\n        table.insert(snapshots, snapshotUtils.roomTilesSnapshot(targetRoom, tool.layer, \"Bucket\", before, after))\n    end\nend\n\nif #snapshots > 0 then\n    history.addSnapshot(snapshotUtils.multiSnapshot(\"Bucket\", snapshots))\nend\n```\n\n`src\\snapshot_utils.lua:238-256` 的 `multiSnapshot` 也逐个回放：\n\n```lua\nlocal function backward(data)\n    for i = #snapshots, 1, -1 do\n        local snap = snapshots[i]\n        snap.backward(snap.data)\n    end\nend\n```\n\n**⇒ 从代码上看应该一次能撤回所有房间，实际却不是。所以这是预料之外的 bug。**\n\n### 三个可疑方向（待复现收窄）\n\n1. **快照值是最小化后的矩阵**：`src\\tiles.lua:82-94` 的 `getRoomTileSnapshotValue` 用 `matrixToTileStringMinimized` 生成快照，宽高取的是**最小化后**的尺寸；`tiles.lua:96-98` 的注释也提到恢复时要补回 `\" \"`。若某房间四周都是 air，恢复时可能只还原中间一小块、其余变 air —— **表现可能被误读成\"只撤了中间的砖\"**。\n2. **同一次点击触发多次填充**：`bucket.lua:179-186` 的防重签名会被 `mousemoved`（`:244` `lastAllRoomsClick = nil`）重置 ⇒ 同一次操作产生多份历史 ⇒ 按一次 Ctrl+Z 只退掉其中一层。\n3. **房间没有该层时快照为 nil**：若某房间 `getRoomTileSnapshotValue` 返回 `nil`，`tiles.restoreRoomSnapshotValue(nil)` 返回 `nil`，`targetRoom[layer].matrix = nil` 可能让该房间后续绘制/保存异常。\n\n### 修复方向（明天再做）\n\n1. **先复现并记录**：点一次 air 填满全图 → 按一次 Ctrl+Z → 截图/记录\"哪些房间回退了、哪些没回退、回退的是否内容正确\"。\n2. 按现象收窄到上面三个方向之一。\n3. 修完要验证：**一次操作 → 一次撤销 → 所有受影响房间完全复原**（可用 bin2json 对比操作前后两个版本的地图 JSON）。\n"
-    }
-  ]
-}
+]

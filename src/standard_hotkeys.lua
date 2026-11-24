@@ -9,6 +9,15 @@ local ghost = require("ghost")
 
 local hotkeys = {}
 
+-- Debug tool: the grave accent selects it, and selects the selection tool again when it is
+-- already active (it used to toggle the coordinate panel). Exposed so the menu bar can reuse it.
+function hotkeys.toggleDebugTool()
+    local toolHandler = require("tools")
+    local target = toolHandler.currentToolName == "debug" and "selection" or "debug"
+
+    toolHandler.selectToolThroughUi(target)
+end
+
 function hotkeys.addStandardHotkeys(hotkeyHandler)
     -- History
     hotkeyHandler.addHotkey("global", configs.hotkeys.redo, history.redo)
@@ -70,14 +79,7 @@ function hotkeys.addStandardHotkeys(hotkeyHandler)
     hotkeyHandler.addHotkey("tools", "c", ghost.togglePlayer)
     hotkeyHandler.addHotkey("tools", "x", ghost.togglePlayerHitbox)
 
-    -- Debug tool: the grave accent selects it, and selects the selection tool again when it is
-    -- already active (it used to toggle the coordinate panel)
-    hotkeyHandler.addHotkey("global", configs.hotkeys.toggleCoordinatePanel, function()
-        local toolHandler = require("tools")
-        local target = toolHandler.currentToolName == "debug" and "selection" or "debug"
-
-        toolHandler.selectToolThroughUi(target)
-    end)
+    hotkeyHandler.addHotkey("global", configs.hotkeys.toggleCoordinatePanel, hotkeys.toggleDebugTool)
 end
 
 return hotkeys
