@@ -12,6 +12,9 @@ local toolHandler = {}
 
 toolHandler.tools = {}
 toolHandler.currentTool = nil
+
+-- Tools that ship with the editor. External editor plugins may not replace them by name.
+local builtinToolNames = {}
 toolHandler.currentToolName = nil
 toolHandler.previousToolName = nil
 
@@ -141,9 +144,12 @@ function toolHandler.loadTool(filename)
     local pathNoExt = utils.stripExtension(filename)
     local filenameNoExt = utils.filename(pathNoExt, "/")
 
-    -- Temporarily disabled, see the issue about the Scripts tool.
-    if filenameNoExt == "scripts" and not utils.startsWith(pathNoExt, "$") then
-        return
+    -- Editor plugins ship their own copies of some tools. The built-in implementation is the
+    -- maintained one, so an external tool must not silently replace it by reusing its name.
+    if not toolHandler.loadingInternalTools and builtinToolNames[filenameNoExt] then
+        logging.info(string.format("[tools] ignoring external tool '%s' from '%s'", filenameNoExt, pathNoExt))
+
+        return filenameNoExt
     end
 
     local handler = utils.rerequire(pathNoExt)
@@ -159,6 +165,10 @@ function toolHandler.loadTool(filename)
 
     if configs.debug.logPluginLoading then
         logging.info("Loaded tool '" .. name ..  "'")
+    end
+
+    if toolHandler.loadingInternalTools then
+        builtinToolNames[name] = true
     end
 
     toolHandler.tools[name] = handler
@@ -364,7 +374,9 @@ end
 function toolHandler.loadInternalTools(path)
     path = path or "tools"
 
+    toolHandler.loadingInternalTools = true
     pluginLoader.loadPlugins(path, nil, toolHandler.loadTool)
+    toolHandler.loadingInternalTools = false
 
     -- Always start with the selection tool instead of restoring the last used one: loading a
     -- heavy tool first (one with many materials) slows the first map load down and its state
