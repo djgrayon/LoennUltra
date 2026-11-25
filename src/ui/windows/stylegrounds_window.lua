@@ -1084,6 +1084,8 @@ local function getDefaultListTarget()
     }
 end
 
+local currentInteractionData
+
 -- Restores a whole styleground state: used by the undo entries and by the auto-edit sessions
 local function applyStyleState(map, state)
     map.stylesFg = utils.deepcopy(state.fg)
@@ -2773,7 +2775,6 @@ end
 
 -- The window is a singleton while the stylegrounds tool is active
 local currentWindow
-local currentInteractionData
 local addingStyle = false
 
 -- Keyboard shortcuts belong to the stylegrounds panel only while the cursor is over it. This
