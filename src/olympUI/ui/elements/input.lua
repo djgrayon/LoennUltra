@@ -1271,22 +1271,11 @@ uie.add("menuItem", {
             return uie.menuItem(""):with({ interactive = -1, height = 2, style = { padding = 0 } }) -- TODO: Divider!
         end
 
-        local element
         if hint == "hint" then
-            element = uie.menuItem(text):with({ interactive = -1 })
-        else
-            element = uie.menuItem(text, data)
+            return uie.menuItem(text):with({ interactive = -1 })
         end
 
-        if type(item) == "table" then
-            local tooltipText = rawget(item, "tooltipText")
-
-            if tooltipText then
-                element.tooltipText = tooltipText
-            end
-        end
-
-        return element
+        return uie.menuItem(text, data)
     end,
 
     cb = function(self)
