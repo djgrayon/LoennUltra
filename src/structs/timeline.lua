@@ -1,81 +1,57 @@
--- TODO - Swaping timeline direction "lags" behind
-
 local timeline = {}
 
 timeline._MT = {}
 timeline._MT.__index = {}
 
+-- index is the number of snapshots currently applied:
+--   index == 0            -> the timeline sits at the state before every snapshot
+--   index == #snapshots   -> every snapshot is applied
+-- backward runs snapshots[index] and then decrements; forward increments first, then runs it.
+-- Keeping the index a plain "applied count" is what makes undo/redo stop cleanly at both ends,
+-- and what lets addSnapshot drop the redo branch after an undo.
 function timeline._MT.__index:forward()
-    if self.index == 0 and self.direction == "backward" then
-        self.index = 1
-    end
+    if self.index < #self.snapshots then
+        self.index += 1
 
-    if self.index <= #self.snapshots then
         local snapshot = self.snapshots[self.index]
 
         if snapshot then
-            if self.direction == "forward" then
-                self.index = self.index + 1
-                snapshot = self.snapshots[self.index]
-
-                if snapshot then
-                    snapshot.forward(snapshot.data)
-                end
-
-            else
-                snapshot.forward(snapshot.data)
-            end
-
-            self.direction = "forward"
-
-            return true
+            snapshot.forward(snapshot.data)
         end
+
+        return true
     end
 
     return false
 end
 
 function timeline._MT.__index:backward()
-    if self.index == #self.snapshots + 1 and self.direction == "forward" then
-        self.index = #self.snapshots
-    end
-
     if self.index >= 1 then
         local snapshot = self.snapshots[self.index]
 
+        self.index -= 1
+
         if snapshot then
-            if self.direction == "backward" then
-                self.index -= 1
-                snapshot = self.snapshots[self.index]
-
-                if snapshot then
-                    snapshot.backward(snapshot.data)
-                end
-
-            else
-                snapshot.backward(snapshot.data)
-            end
-
-            self.direction = "backward"
-
-            return true
+            snapshot.backward(snapshot.data)
         end
+
+        return true
     end
 
     return false
 end
 
 function timeline._MT.__index:addSnapshot(snapshot)
+    -- Editing after an undo drops the redo branch, so an undone snapshot can never be replayed
+    -- against a state that has already moved on
     if self.index < #self.snapshots then
-        for i = self.index + 1, #self.snapshots do
+        for i = #self.snapshots, self.index + 1, -1 do
             self.snapshots[i] = nil
         end
     end
 
-    self.direction = "forward"
     self.index += 1
-
-    table.insert(self.snapshots, snapshot)
+    self.snapshots[self.index] = snapshot
 
     if self.limit and self.limit > 0 then
         while #self.snapshots > self.limit do
@@ -95,7 +71,6 @@ function timeline.create(snapshotLimit)
 
     res.snapshots = {}
     res.index = 0
-    res.direction = false
     res.limit = snapshotLimit
 
     return setmetatable(res, timeline._MT)
