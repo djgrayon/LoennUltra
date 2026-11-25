@@ -1093,11 +1093,15 @@ local function applyStyleState(map, state)
 
     -- Keep the open window in sync when the change is undone or redone
     if currentInteractionData and currentInteractionData.rebuildListItems then
+        pcall(logging.log, "INFO", "[diag] styleground.applyStyleState refresh=1", nil, true)
+
         currentInteractionData.listTarget = getDefaultListTarget()
 
         currentInteractionData.rebuildListItems()
         stylegroundWindow.updateStylegroundForm(currentInteractionData)
         stylegroundWindow.updateStylegroundPreview(currentInteractionData)
+    else
+        pcall(logging.log, "INFO", "[diag] styleground.applyStyleState refresh=0", nil, true)
     end
 end
 
@@ -1333,6 +1337,8 @@ local function selectStylesDeferred(interactionData, styles, list, primaryStyle)
             and list:setStyleSelection(styleSet, primaryStyle or styles[#styles])
 
         if not primaryItem then
+            pcall(logging.log, "INFO", "[diag] sg.pasteSkipForm", nil, true)
+
             return
         end
 
@@ -2553,6 +2559,9 @@ function stylegroundWindow.getStylegroundList(map, interactionData, fg)
     }
 
     local column, list = listWidgets.getList(function(element, listItem)
+        pcall(logging.log, "INFO", string.format("[diag] sg.select style=%s",
+            tostring(listItem and listItem.data and listItem.data.style)), nil, true)
+
         -- Selecting something else ends a pending form edit session (one undo step per session)
         stylegroundWindow.endAutoEdit(interactionData)
 
@@ -2769,6 +2778,9 @@ function stylegroundWindow.getStylegroundList(map, interactionData, fg)
         end
 
         if not primaryItem then
+            pcall(logging.log, "INFO", string.format("[diag] sg.setStyleSelection found=false children=%d",
+                #(self.children or {})), nil, true)
+
             return nil
         end
 
