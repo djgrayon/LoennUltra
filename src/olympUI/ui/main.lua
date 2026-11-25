@@ -460,13 +460,12 @@ function ui.mousereleased(x, y, button, istouch, presses)
     local ui = ui
 
     ui.mousePresses = ui.mousePresses - presses
-    if ui.mousePresses == 0 and uin then
-        uin.captureMouse(false)
+    if ui.mousePresses < 0 then
+        ui.mousePresses = 0
     end
 
-    if ui.mousePresses <= 0 then
-        ui.mousePresses = 0
-        ui.draggingCounter = 1
+    if ui.mousePresses <= 0 and uin then
+        uin.captureMouse(false)
     end
 
     local root = ui.root
@@ -475,6 +474,9 @@ function ui.mousereleased(x, y, button, istouch, presses)
     end
 
     ui.draggingCounter = ui.draggingCounter - 1
+    if ui.draggingCounter < 0 then
+        ui.draggingCounter = 0
+    end
 
     local dragging = ui.dragging
     local hovering = root:getChildAt(x, y)
