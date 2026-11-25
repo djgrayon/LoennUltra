@@ -1025,7 +1025,7 @@ local function handleListKeyboardNavigation(list, key, hookOptions)
                 return item.interactive == nil or item.interactive > 0
             end
 
-            local newIndex = list.selectedIndex + direction
+            local newIndex = selectedIndex + direction
 
             while dataList[newIndex] and not isSelectable(dataList[newIndex]) do
                 newIndex = newIndex + direction
