@@ -332,13 +332,6 @@ local function toFileURL(path)
     return "file://" .. unixPath
 end
 
-local function openWithShell(path)
-    local command = string.format('start "" "%s"', path)
-    local result = os.execute(command)
-
-    return result == 0 or result == true
-end
-
 local function openNativeFolder(path)
     -- Diagnostic: openURL may block the main loop, flush before calling it
     pcall(logging.log, "INFO", "[diag] project.openNativeFolder begin path=" .. tostring(path), nil, true)
@@ -347,16 +340,13 @@ local function openNativeFolder(path)
     local opened = false
     local mode = "openURL"
 
-    -- The URL variant does not block the main loop; the shell fallback is only a last resort
+    -- The URL variant does not block the main loop. There used to be an os.execute("start ...")
+    -- fallback for Windows, but os.execute is synchronous: a slow file manager froze the editor,
+    -- so a failure is reported through the notification below instead of retrying in the shell.
     local success, result = pcall(love.system.openURL, toFileURL(path))
 
     if success and result ~= false then
         opened = true
-    end
-
-    if not opened and utils.getOS() == "Windows" then
-        mode = "shell"
-        opened = openWithShell(path)
     end
 
     local elapsed = (love.timer.getTime() - started) * 1000
