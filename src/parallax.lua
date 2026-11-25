@@ -12,7 +12,9 @@ local fieldOrder = {
     "flag", "notflag", "blendmode", "color",
     "x", "y", "scrollx", "scrolly",
     "speedx", "speedy", "fadex", "fadey",
-    "alpha"
+    "alpha",
+    "flipx", "flipy", "loopx", "loopy",
+    "instantIn", "instantOut", "fadeIn"
 }
 
 local defaultData = {
