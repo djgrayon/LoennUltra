@@ -549,6 +549,29 @@ local function wrapInSubmenuClosers(menu)
     end
 end
 
+-- Menu tooltips are language-driven: a row only gets one when ui.menubar_tooltip.<key> exists,
+-- so adding a new tip later is only a language-file edit.
+local function applyMenuTooltips(menu, language)
+    if utils.typeof(menu) ~= "table" then
+        return
+    end
+
+    local tips = language.ui.menubar_tooltip
+
+    if tips and type(menu[1]) == "string" then
+        local key = menu._key or menu[1]
+        local text = tips[key]
+
+        if text then
+            menu.tooltipText = tostring(text)
+        end
+    end
+
+    for _, sub in pairs(menu) do
+        applyMenuTooltips(sub, language)
+    end
+end
+
 -- No element type means it is plain text
 -- Only other supported type is currently checkboxes
 local function handleElementTypes(menu)
@@ -715,6 +738,7 @@ function menubar.getMenubar()
     collectModMenus(preparedMenubar, language)
     addRecentFiles(preparedMenubar)
     wrapInSubmenuClosers(preparedMenubar)
+    applyMenuTooltips(preparedMenubar, language)
     handleElementTypes(preparedMenubar)
 
     local topbar = uiElements.topbar(preparedMenubar)

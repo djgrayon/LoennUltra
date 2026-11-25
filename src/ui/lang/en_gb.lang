@@ -647,3 +647,18 @@ ui.project_window.import_state_fileName=the file name is empty or contains a pat
 ui.project_window.import_state_image=the image could not be read
 ui.project_window.import_state_write=the file could not be written
 ui.project_window.import_state_root=the target XML has no </Data> root element
+
+# Menu-item tooltips (second level and below). Only the keys listed here get a tooltip.
+# \n is turned into a real line break (utils.unbackslashify); keep each tip to at most two lines.
+ui.menubar_tooltip.close=Close the project without quitting Loenn
+ui.menubar_tooltip.item_flip_horizontal=Only applies to decals and some entities
+ui.menubar_tooltip.item_flip_vertical=Only applies to decals and some entities
+ui.menubar_tooltip.item_rotate_left=Only applies to decals and some entities
+ui.menubar_tooltip.item_rotate_right=Only applies to decals and some entities
+ui.menubar_tooltip.item_add_node=Only applies to entities that have nodes
+ui.menubar_tooltip.view_only_depended_on=Limit the toolbar's entity/trigger/decal placement lists\nto this map's dependencies. See the three sub-items below.
+ui.menubar_tooltip.view_depended_on_entities=Picks from every installed mod. Not recommended.
+ui.menubar_tooltip.view_depended_on_triggers=Picks from every installed mod. Not recommended.
+ui.menubar_tooltip.view_depended_on_decals=Recommended. Otherwise the list can lag and get hard to navigate.
+ui.menubar_tooltip.save_map_image=Saves the whole map by default
+ui.menubar_tooltip.check_for_updates=Currently not working

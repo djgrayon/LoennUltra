@@ -841,3 +841,18 @@ ui.project_window.import_state_fileName=文件名是空的或含有路径
 ui.project_window.import_state_image=读取图片失败
 ui.project_window.import_state_write=写入文件失败
 ui.project_window.import_state_root=目标 XML 里找不到 </Data> 根元素
+
+# 菜单项悬停说明（二级及以下）。只写需要提示的项，未写的 key 不显示任何提示。
+# \n 会被解析成真实换行（utils.unbackslashify），单条不超过两行。
+ui.menubar_tooltip.close=关闭工程而不退出 Loenn
+ui.menubar_tooltip.item_flip_horizontal=仅限 Decal 和部分实体
+ui.menubar_tooltip.item_flip_vertical=仅限 Decal 和部分实体
+ui.menubar_tooltip.item_rotate_left=仅限 Decal 和部分实体
+ui.menubar_tooltip.item_rotate_right=仅限 Decal 和部分实体
+ui.menubar_tooltip.item_add_node=仅限有节点的实体
+ui.menubar_tooltip.view_only_depended_on=是否在工具栏的实体/trigger/decal 放置选择中\n限定为本地图依赖范围。详见下方三个分项的说明
+ui.menubar_tooltip.view_depended_on_entities=一般会从所有 mod 中挑选实体放置，推荐不勾选
+ui.menubar_tooltip.view_depended_on_triggers=一般会从所有 mod 中挑选 trigger 放置，推荐不勾选
+ui.menubar_tooltip.view_depended_on_decals=推荐勾选，否则可能导致卡顿和选择困难
+ui.menubar_tooltip.save_map_image=默认输出全地图
+ui.menubar_tooltip.check_for_updates=此项无效
