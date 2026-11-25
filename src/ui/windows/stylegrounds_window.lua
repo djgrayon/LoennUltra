@@ -1685,6 +1685,14 @@ local function getStylegroundFormButtons(interactionData, formFields, formOption
         },
     }
 
+    table.insert(buttons, 1, {
+        text = tostring(language.ui.styleground_window.form.new),
+        callback = function()
+            interactionData.addNewMethod = {method = "parallax"}
+            addNewStyle(interactionData, formFields)
+        end
+    })
+
     if canChangeForeground and listHasElements then
         table.insert(buttons, changeForegroundButton)
     end
@@ -1703,8 +1711,8 @@ local function getStylegroundFormButtons(interactionData, formFields, formOption
 
     local buttonRow = formHelper.getFormButtonRow(buttons, formFields, formOptions)
 
-    -- The "New" dropdown is gone: the right side of the tools window lists what can be added.
-    -- "New" therefore creates a plain parallax style, groups come from the Create Group button.
+    -- The "New" dropdown is gone; the button row carries a plain "add" button instead, and the
+    -- right side of the tools window can still drag styles in.
     interactionData.addNewMethod = {method = "parallax"}
 
     return buttonRow

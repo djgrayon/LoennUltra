@@ -67,7 +67,7 @@ ui.styleground_window.preview.no_preview=No preview available
 ui.styleground_window.preview.static_warning=*Preview for reference only
 
 ui.styleground_window.form.update=Update
-ui.styleground_window.form.new=New
+ui.styleground_window.form.new=Add (or drag from the toolbar)
 ui.styleground_window.form.remove=Remove
 ui.styleground_window.form.move_up=Move up
 ui.styleground_window.form.move_down=Move down
