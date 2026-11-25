@@ -562,7 +562,9 @@ local function applyMenuTooltips(menu, language)
         local key = menu._key or menu[1]
         local text = tips[key]
 
-        if text then
+        -- The language table is a proxy: reading any missing key returns the nil_lang placeholder
+        -- (_exists = false) instead of nil, and tostring() of it is "%unknown%".
+        if text and text._exists ~= false then
             menu.tooltipText = tostring(text)
         end
     end
