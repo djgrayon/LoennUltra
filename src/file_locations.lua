@@ -50,8 +50,16 @@ function fileLocations.getStorageDir()
     end
 end
 
+local cachedLogPath
+
 function fileLocations.getLogPath()
-    return filesystem.joinpath(fileLocations.getStorageDir(), "run.log")
+    if not cachedLogPath then
+        local storageDir = fileLocations.getStorageDir()
+        local stamp = os.date("%Y-%m-%d_%H-%M-%S")
+        cachedLogPath = filesystem.joinpath(storageDir, "run-" .. stamp .. ".log")
+    end
+
+    return cachedLogPath
 end
 
 function fileLocations.getSettingsPath()
