@@ -19,7 +19,7 @@ local function ensureObjectTiles(room)
         local targetHeight = math.ceil(room.height / 8)
 
         if width ~= targetWidth or height ~= targetHeight then
-            tiles.matrix = objectTilesStruct.resize(tiles.matrix, targetWidth, targetHeight)
+            tiles.matrix = objectTilesStruct.resize(tiles, targetWidth, targetHeight).matrix
         end
     end
 
