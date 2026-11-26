@@ -303,7 +303,7 @@ settings.ui.hotkeys.description.focusMaterialSearch=Focus the search field.
 
 # Dependency Window
 ui.dependency_window.window_title=Dependencies
-ui.dependency_window.group.missing_mods=Missing from dependencies
+ui.dependency_window.group.missing_mods=Missing
 ui.dependency_window.group.depended_on=Dependencies
 ui.dependency_window.group.available_mods=Available Mods
 ui.dependency_window.add_dependency=Add dependency

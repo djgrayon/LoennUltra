@@ -24,6 +24,11 @@ local gridElement = require("ui.widgets.grid")
 local windowPersister = require("ui.window_position_persister")
 local windowPersisterName = "dependency_window"
 
+local fonts = require("fonts")
+
+local COLUMN_WIDTH = 256
+local TITLE_RULE_WIDTH = 200
+
 local dependencyWindow = {}
 
 local dependencyWindowGroup = uiElements.group({})
@@ -176,18 +181,23 @@ local function getModSections(groupName, mods, addPadding, interactionData)
     local language = languageRegistry.getLanguage()
     local labelText = tostring(language.ui.dependency_window.group[groupName])
 
-    local separator = uiElements.lineSeparator(labelText, 16, true)
-    local column = uiElements.column({separator})
+    local baseFont = uiElements.label.__default.style.font or love.graphics.getFont()
+    local titleLabel = uiElements.label(labelText, fonts.getScreenFont(math.floor(baseFont:getHeight() * 1.5 + 0.5)))
+    local titleBlock = uiElements.column({
+        titleLabel,
+        uiElements.horizontalLine(TITLE_RULE_WIDTH)
+    }):with({
+        style = { spacing = 2, padding = {0, 6, 0, 4} }
+    })
+
+    local column = uiElements.column({}):with({ style = { spacing = 14 } })
 
     column._groupName = groupName
+    column._title = titleBlock
 
     interactionData.sectionColumns = interactionData.sectionColumns or {}
     interactionData.sectionColumns[groupName] = column
     interactionData.modSections = interactionData.modSections or {}
-
-    if addPadding then
-        separator:addBottomPadding()
-    end
 
     local orderedSections = {}
 
@@ -389,13 +399,11 @@ function dependencyWindow.getWindowContent(modPath, side, interactionData)
 
     -- Three columns side by side instead of one long column. The columns touch so the separator
     -- lines form one continuous line across the window
-    local columnWidth = 256
-
     local function prepareColumn(section)
         section:with({
-            width = columnWidth,
-            minWidth = columnWidth,
-            maxWidth = columnWidth
+            width = COLUMN_WIDTH,
+            minWidth = COLUMN_WIDTH,
+            maxWidth = COLUMN_WIDTH
         })
 
         return section
@@ -408,7 +416,29 @@ function dependencyWindow.getWindowContent(modPath, side, interactionData)
     }):with({
         spacing = 0,
         style = {
-            padding = {0, 8, 0, 8}
+            padding = {20, 8, 0, 8}
+        }
+    })
+
+    local function prepareTitle(section)
+        local title = section._title
+        title:with({
+            width = COLUMN_WIDTH,
+            minWidth = COLUMN_WIDTH,
+            maxWidth = COLUMN_WIDTH
+        })
+
+        return title
+    end
+
+    local titleRow = uiElements.row({
+        prepareTitle(missingModsSection),
+        prepareTitle(dependedOnSection),
+        prepareTitle(uncategorizedSection)
+    }):with({
+        spacing = 0,
+        style = {
+            padding = {20, 8, 0, 8}
         }
     })
 
@@ -421,6 +451,12 @@ function dependencyWindow.getWindowContent(modPath, side, interactionData)
     })
     scrollableColumn:with(uiUtils.fillHeight(true))
 
+    local windowContent = uiElements.column({titleRow, scrollableColumn}):with({
+        style = {
+            spacing = 0
+        }
+    }):with(uiUtils.fillHeight(true))
+
     interactionData.sectionsColumn = columns
     interactionData.missingModsSection = missingModsSection
     interactionData.dependedOnSection = dependedOnSection
@@ -428,7 +464,7 @@ function dependencyWindow.getWindowContent(modPath, side, interactionData)
     interactionData.windowContentScrollable = scrollableColumn
     interactionData.windowContent = columns
 
-    return scrollableColumn, columns
+    return windowContent, columns
 end
 
 local function addEverestDependency(metadata)
