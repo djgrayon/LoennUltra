@@ -72,7 +72,8 @@ function themer.applyFontInfo(theme, scale, previousFont)
     end
 
     if not labelFont then
-        local defaultFont = love.graphics.newFont(labelFontSize)
+        local defaultFont = fonts.loadUIFont(fonts.getDefaultUIFontPath(), labelFontSize)
+            or love.graphics.newFont(labelFontSize)
         local targetHeight = defaultFont:getHeight()
 
         if labelFilename then

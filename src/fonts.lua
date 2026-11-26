@@ -7,7 +7,9 @@
 
 local font = {}
 
-local cjkFontPath = "assets/fonts/FusionPixel12-zh_hans.ttf"
+local DEFAULT_UI_FONT_PATH = "assets/fonts/NotoSansCJKsc-Bold.otf"
+
+local cjkFontPath = DEFAULT_UI_FONT_PATH
 local cjkFonts = {}
 local labelFonts = {}
 local screenFonts = {}
@@ -184,6 +186,10 @@ end
 -- cannot be loaded so callers can fall back to the default font.
 function font.loadUIFont(path, size)
     return loadFontFromPath(path, size, "normal")
+end
+
+function font.getDefaultUIFontPath()
+    return DEFAULT_UI_FONT_PATH
 end
 
 function font.addCJKFallback(target, size)
