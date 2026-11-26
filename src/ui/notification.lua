@@ -95,8 +95,18 @@ end
 -- Long messages (map paths and the like) would stretch the popup across a large part of the
 -- workspace, which makes a corner popup look like it is centered. Wrap them to the available
 -- width instead, and only trim with an ellipsis when even that would take too many lines.
+local function safeTextWidth(font, text)
+    local ok, width = pcall(font.getWidth, font, text)
+
+    if ok and type(width) == "number" then
+        return width
+    end
+
+    return 0
+end
+
 local function trimToWidth(text, font, maxWidth)
-    if font:getWidth(text) <= maxWidth then
+    if safeTextWidth(font, text) <= maxWidth then
         return text
     end
 
@@ -107,7 +117,7 @@ local function trimToWidth(text, font, maxWidth)
         local cut = utf8.offset(text, length) or 1
         local candidate = text:sub(1, cut - 1) .. suffix
 
-        if font:getWidth(candidate) <= maxWidth then
+        if safeTextWidth(font, candidate) <= maxWidth then
             return candidate
         end
 
@@ -132,7 +142,7 @@ local function wrapToWidth(text, font, maxWidth, maxLines)
             for word in paragraph:gmatch("%S+") do
                 local candidate = current == "" and word or (current .. " " .. word)
 
-                if current == "" or font:getWidth(candidate) <= maxWidth then
+                if current == "" or safeTextWidth(font, candidate) <= maxWidth then
                     current = candidate
 
                 else
