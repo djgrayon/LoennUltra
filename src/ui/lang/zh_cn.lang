@@ -570,6 +570,7 @@ ui.room_window.creating_room=正在创建房间
 ui.room_window.save_changes_create=创建房间
 ui.room_window.save_changes_update=更新房间
 ui.room_window.close_window=关闭窗口
+ui.room_window.room_too_large=房间尺寸过大（%s x %s 格），无法创建
 
 # About Window
 ui.about_window.title=关于

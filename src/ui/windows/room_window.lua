@@ -27,6 +27,12 @@ local windowPersisterName = "room_window"
 
 local roomWindow = {}
 
+local notifications = require("ui.notification")
+
+local MAX_ROOM_TILES = 10000
+local MAX_ROOM_SIZE_PX = MAX_ROOM_TILES * 8
+local MAX_ROOM_AREA = 10000000
+
 local songs = table.keys(enums.songs)
 local ambientSounds = table.keys(enums.ambient_sounds)
 local colorOptions = {}
@@ -66,11 +72,13 @@ local defaultFieldInformation = {
         fieldType = "integer",
         minimumValue = 8,
         warningBelowValue = roomStruct.recommendedMinimumWidth,
+        maximumValue = MAX_ROOM_SIZE_PX,
     },
     height = {
         fieldType = "integer",
         minimumValue = 8,
         warningBelowValue = roomStruct.recommendedMinimumHeight,
+        maximumValue = MAX_ROOM_SIZE_PX,
     },
 
     color = {
@@ -243,6 +251,20 @@ local function saveRoomCallback(formFields, room, editing, usingPixels)
 
         local roomTilesWidth = math.ceil(newRoomData.width / 8)
         local roomTilesHeight = math.ceil(newRoomData.height / 8)
+
+        local tileCount = roomTilesWidth * roomTilesHeight
+
+        if roomTilesWidth > MAX_ROOM_TILES
+            or roomTilesHeight > MAX_ROOM_TILES
+            or tileCount > MAX_ROOM_AREA then
+
+            local language = languageRegistry.getLanguage()
+
+            notifications.notify(string.format(tostring(language.ui.room_window.room_too_large),
+                roomTilesWidth, roomTilesHeight))
+
+            return
+        end
 
         for attribute, value in pairs(newRoomData) do
             if not saveRoomManualAttributesCreating[attribute] then

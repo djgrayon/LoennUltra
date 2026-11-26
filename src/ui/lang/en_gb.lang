@@ -361,6 +361,7 @@ ui.room_window.creating_room=Creating room
 ui.room_window.save_changes_create=Create room
 ui.room_window.save_changes_update=Update room
 ui.room_window.close_window=Close window
+ui.room_window.room_too_large=Room size is too large (%s x %s tiles), cannot create
 
 
 # About Window
