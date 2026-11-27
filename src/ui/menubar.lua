@@ -490,7 +490,6 @@ menubar.menubar = {
             {"debug_reload_tools", debugUtils.reloadTools},
             {"debug_reload_everything", debugUtils.reloadEverything},
             {"debug_reload_lua_instance", debugUtils.restartLuaInstance},
-            {"debug_mode", debugUtils.debug},
         }},
     }},
     {"ghost", {
