@@ -58,7 +58,7 @@ end
 -- Check if we are up to date or not
 -- Assume we are up to date if we don't have any available versions
 function updater.isLatestVersion()
-    local current = meta.version
+    local current = meta.displayVersion
     local availableVersions = updater.getAvailableVersions()
 
     if availableVersions and #availableVersions > 0 then
@@ -220,7 +220,7 @@ function updater.checkForUpdates()
                 -- Metatables are lost over channels
                 local shouldNotify = forceNotification or updater.shouldNotifyUser(tostring(latestVersion))
 
-                channel:push({"updaterUpdateAvailable", tostring(latestVersion), tostring(meta.version), shouldNotify})
+                channel:push({"updaterUpdateAvailable", tostring(latestVersion), tostring(meta.displayVersion), shouldNotify})
             end
         end
     ]]

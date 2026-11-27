@@ -34,7 +34,7 @@ end
 local function getInstallInformation()
     local major, minor, revision, codename = love.getVersion()
     local installInfoLines = {
-        string.format("Editor version: %s", meta.version),
+        string.format("Editor version: %s", meta.displayVersion),
         string.format("Love2d version: %d.%d.%d - %s", major, minor, revision, codename),
         string.format("Operating system: %s", utils.getOS()),
         string.format("Runtime arch: %s (luajit %s, jit %s)", tostring(jit and jit.arch), tostring(jit and jit.version), tostring(jit and jit.status()))

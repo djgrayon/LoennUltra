@@ -45,7 +45,7 @@ function aboutWindow.showAboutWindow()
     local readmeText = aboutText.readme
     local description = aboutText.description
     local credits = aboutText.credits
-    local versionText = string.format(aboutText.version, meta.version)
+    local versionText = string.format(aboutText.version, meta.displayVersion)
 
     local logoScaleX = 0.5
     local logoScaleY = 0.5
