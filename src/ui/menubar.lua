@@ -379,8 +379,7 @@ local debugMenu = {"debug", {
     {"show_layout_bounds", toggleLayoutBounds, "checkbox", getLayoutBounds},
     {},
     {"clear_cache", clearCache},
-    {"reset_settings", resetSettings},
-    {"test_console", debugUtils.debug}
+    {"reset_settings", resetSettings}
 }}
 
 -- Tree of menubar items
