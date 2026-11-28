@@ -13,7 +13,7 @@ Loenn Ultra 是 Celeste 地图编辑器 [Lönn](https://github.com/CelestialCart
 
 ### 平台支持
 
-- **macOS（Apple Silicon）**：macOS 包改用 LÖVE 11.5 universal 引擎；`Lönn.app` 启动脚本检测到 Apple Silicon 时通过 `arch -arm64` 以原生架构启动，避免此前整棵进程树被 Rosetta 按 x86_64 拉起。该问题会导致编辑后持续卡顿、大型地图保存无法完成。启动日志会输出 `Runtime arch: <arch>` 可供确认。
+- **macOS（Apple Silicon）**：macOS 包改用 LÖVE 11.5 universal 引擎；启动脚本检测到 Apple Silicon 时通过 `arch -arm64` 以原生架构启动，避免此前整棵进程树被 Rosetta 按 x86_64 拉起。该问题会导致编辑后持续卡顿、大型地图保存无法完成。启动日志会输出 `Runtime arch: <arch>` 可供确认。
 - **macOS**：`nfd.so` 更换为 x86_64 + arm64 通用二进制，Intel Mac 与 Apple Silicon 均可使用。
 - **macOS**：按 arm64 ABI 修正 `lfs_ffi.lua` 中 `dirent` 结构体的字段宽度，修复目录枚举出现空名或乱码文件名。
 - **Linux**：修正 `utils/filesystem.lua` 与 `utils/threads.lua` 将非 Windows 平台判为 Windows 的问题，文件对话框依赖库（`nfd.so` / `nfd_zenity.so`）现可正常加载。
@@ -84,13 +84,13 @@ Loenn Ultra 是 Celeste 地图编辑器 [Lönn](https://github.com/CelestialCart
 
 ### macOS
 
-下载 `LoennUltra-<版本>-macos.zip`，解压得到 `Lönn.app`。
+下载 `LoennUltra-<版本>-macos.zip`，解压得到 `LoennUltra.app`。
 
 首次运行时若被系统拦截，在终端执行：
 
 ```bash
-xattr -dr com.apple.quarantine /路径/到/Lönn.app
-chmod +x /路径/到/Lönn.app/Contents/MacOS/*.sh
+xattr -dr com.apple.quarantine /路径/到/LoennUltra.app
+chmod +x /路径/到/LoennUltra.app/Contents/MacOS/*.sh
 ```
 
 ### Linux
@@ -164,8 +164,8 @@ Stylegrounds 面板：选中条目时显示预览与属性。
 
 ## 反馈
 
-- 问题与建议提交至本仓库 [Issues](https://github.com/djgrayon/LoennUltra/issues)。提交时请说明操作步骤、预期结果与实际结果，并尽量附上 `run.log`。
-- `run.log` 位置：Windows `%LOCALAPPDATA%\Loenn\run.log`，macOS `~/Library/Application Support/Loenn/run.log`。
+- 问题与建议提交至本仓库 [Issues](https://github.com/djgrayon/LoennUltra/issues)。提交时请说明操作步骤、预期结果与实际结果，并尽量附上日志文件。
+- 日志位置：Windows `%LOCALAPPDATA%\Loenn\`，macOS `~/Library/Application Support/Loenn/`。
 
 ## 关于本分支
 
